@@ -3,9 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3A2E">
 <title>Mi Semestre</title>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="shortcut icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Metadata PWA e iOS Safari -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Semestre">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<!-- Anti-FOUC: aplica tema/acento ANTES del primer paint para evitar parpadeo -->
+<script>
+(function(){
+  var THEMES={
+    'verde-bosque':{bg:'#1F3A2E',bgDeep:'#152820',isLight:false},
+    'azul-noche':{bg:'#1A2B3C',bgDeep:'#111E2A',isLight:false},
+    'purpura-oscuro':{bg:'#2A1A3A',bgDeep:'#1C1028',isLight:false},
+    'carbon':{bg:'#1E1E1E',bgDeep:'#121212',isLight:false},
+    'cacao':{bg:'#2E1E14',bgDeep:'#1F140D',isLight:false},
+    'azul-pizarra':{bg:'#1E2A3A',bgDeep:'#131C28',isLight:false},
+    'oliva':{bg:'#2A2E1A',bgDeep:'#1C2012',isLight:false},
+    'vinotinto':{bg:'#2E1A22',bgDeep:'#1F1118',isLight:false},
+    'gris-claro':{bg:'#E5E7EB',bgDeep:'#D1D5DB',isLight:true}
+  };
+  var ACCENTS={
+    'amber':{hex:'#D97706',rgb:'217,119,6',onAccent:'#FFFFFF'},
+    'coral':{hex:'#D6603C',rgb:'214,96,60',onAccent:'#FFFFFF'},
+    'sky':{hex:'#0284C7',rgb:'2,132,199',onAccent:'#FFFFFF'},
+    'mint':{hex:'#059669',rgb:'5,150,105',onAccent:'#FFFFFF'},
+    'lavender':{hex:'#7C3AED',rgb:'124,58,237',onAccent:'#FFFFFF'},
+    'rose':{hex:'#DB2777',rgb:'219,39,119',onAccent:'#FFFFFF'},
+    'lime':{hex:'#65A30D',rgb:'101,163,13',onAccent:'#FFFFFF'},
+    'gold':{hex:'#B45309',rgb:'180,83,9',onAccent:'#FFFFFF'},
+    'negro':{hex:'#000000',rgb:'0,0,0',onAccent:'#FFFFFF',lightOnly:true},
+    'blanco':{hex:'#FFFFFF',rgb:'255,255,255',onAccent:'#111827',darkOnly:true}
+  };
+  try{
+    var raw=localStorage.getItem('escuela-data');
+    if(raw){
+      var d=JSON.parse(raw);
+      var themeId=d.theme||'verde-bosque';
+      var accentId=d.accent||'amber';
+      var t=THEMES[themeId]||THEMES['verde-bosque'];
+      
+      // Control de compatibilidad anti-FOUC
+      var a=ACCENTS[accentId]||ACCENTS['amber'];
+      if(a.lightOnly && !t.isLight){ accentId = 'amber'; a=ACCENTS['amber']; }
+      if(a.darkOnly && t.isLight){ accentId = 'negro'; a=ACCENTS['negro']; }
+
+      var r=document.documentElement;
+      r.style.setProperty('--bg',t.bg);
+      r.style.setProperty('--bg-deep',t.bgDeep);
+      if(t.isLight){
+        r.style.setProperty('--chalk','#111827');
+        r.style.setProperty('--chalk-dim','rgba(17, 24, 39, 0.65)');
+        r.style.setProperty('--rule','rgba(17, 24, 39, 0.15)');
+        r.style.setProperty('--ink','#111827');
+        r.style.setProperty('--ink-dim','rgba(17, 24, 39, 0.6)');
+        r.style.setProperty('--glass','rgba(255, 255, 255, 0.65)');
+        r.style.setProperty('--glass-border','rgba(0, 0, 0, 0.12)');
+        r.style.setProperty('--glass-hover','rgba(255, 255, 255, 0.85)');
+        r.style.setProperty('--dots-color','rgba(0, 0, 0, 0.07)');
+        r.style.setProperty('--select-bg','rgba(255, 255, 255, 0.85)');
+        r.style.setProperty('--option-bg','#F3F4F6');
+        r.style.setProperty('--option-color','#111827');
+      }
+      r.style.setProperty('--amber',a.hex);
+      r.style.setProperty('--amber-rgb',a.rgb);
+      r.style.setProperty('--amber-text',a.onAccent);
+      document.addEventListener('DOMContentLoaded',function(){
+        var m=document.querySelector('meta[name="theme-color"]');
+        if(m) m.content=t.bg;
+      });
+    }
+  }catch(e){}
+})();
+</script>
 <style>
   :root{
     --bg: #1F3A2E;
@@ -15,19 +92,31 @@
     --chalk: #F4F1E6;
     --chalk-dim: rgba(244,241,230,0.55);
     --rule: rgba(244,241,230,0.16);
-    --ink: #26251F;
-    --ink-dim: #6b6a5f;
+    --ink: #F4F1E6;
+    --ink-dim: rgba(244,241,230,0.5);
+    --glass: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.12);
+    --glass-hover: rgba(255,255,255,0.1);
+    --dots-color: rgba(244,241,230,0.05);
     --amber: #E8A33D;
+    --amber-rgb: 232,163,61;
+    --amber-text: #241705;
     --coral: #D6603C;
     --sage: #7FA687;
-    --radius: 10px;
+    --radius: 12px;
+  }
+  /* Transición suave al cambiar tema */
+  body, header.top{ transition: background-color 0.35s ease; }
+  html{
+    text-size-adjust: 100%;
   }
   *{box-sizing:border-box;}
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
   body{
     margin:0;
     background: var(--bg);
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(244,241,230,0.05) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, var(--dots-color, rgba(244,241,230,0.05)) 1px, transparent 0);
     background-size: 22px 22px;
     color: var(--chalk);
     font-family: 'IBM Plex Sans', sans-serif;
@@ -58,7 +147,7 @@
     padding: 9px 16px; border-radius: 999px; cursor:pointer; transition: all .15s ease;
   }
   nav.tabs button:hover{ color: var(--chalk); border-color: var(--chalk-dim); }
-  nav.tabs button.active{ background: var(--amber); color: #241705; border-color: var(--amber); }
+  nav.tabs button.active{ background: var(--amber); color: var(--amber-text); border-color: var(--amber); }
 
   .panel{ display:none; }
   .panel.active{ display:block; animation: fade .2s ease; }
@@ -66,18 +155,22 @@
 
   /* ---- Horario grid ---- */
   .grid-card{
-    background: var(--surface); border-radius: var(--radius); padding: 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
   }
   .schedule-grid{
     display:grid;
     grid-template-columns: 68px repeat(5, 1fr);
     grid-auto-rows: minmax(48px, auto);
     position: relative;
-    border-top: 1px solid var(--surface-dim); border-left: 1px solid var(--surface-dim);
+    border-top: 1px solid var(--glass-border); border-left: 1px solid var(--glass-border);
   }
   .g-head, .g-time, .g-cell{
-    border-right: 1px solid var(--surface-dim); border-bottom: 1px solid var(--surface-dim);
+    border-right: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
   }
   .g-head{
     font-family:'IBM Plex Mono', monospace; font-size: 11px; letter-spacing:.06em;
@@ -92,15 +185,17 @@
   .g-cell:hover{ background: rgba(232,163,61,0.12); }
   
   .g-block{
-    margin: 2px; border-radius: 6px; padding: 6px 8px;
+    margin: 1px 2px; border-radius: 6px; padding: 5px 7px;
     font-size: 11.5px; line-height:1.25; color:#fff; cursor:pointer; overflow:hidden;
     font-family:'IBM Plex Sans', sans-serif; font-weight:500; z-index: 2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.15s ease, box-shadow 0.15s ease, min-height 0.15s ease;
     display: flex; flex-direction: column; justify-content: space-between;
   }
-  .g-block:hover{ transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.28); z-index: 4; }
-  .g-block b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:12.5px; margin-bottom: 1px; }
-  .g-block .g-time-badge{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; opacity:0.9; margin-top:3px; }
+  .g-block:hover{ transform: scale(1.02); box-shadow: 0 6px 18px rgba(0,0,0,0.32); z-index: 10; }
+  .g-block.compact{ padding: 3px 6px; justify-content: center; }
+  .g-block.compact:hover{ min-height: 54px !important; transform: scale(1.04); z-index: 10; }
+  .g-block b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:12px; margin-bottom: 1px; }
+  .g-block .g-time-badge{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; opacity:0.9; margin-top:2px; }
   .g-block .g-aula{ font-size:10px; font-weight:600; opacity:0.95; margin-top:2px; }
 
   .hint{ color: var(--ink-dim); font-size: 12.5px; margin-top: 12px; font-family:'IBM Plex Mono', monospace; }
@@ -108,13 +203,20 @@
   /* ---- Materias ---- */
   .cards{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 14px; }
   .mcard{
-    background: var(--surface); border-radius: var(--radius); padding: 16px;
-    color: var(--ink); position:relative; border-left: 6px solid var(--amber);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 16px;
+    color: var(--chalk); position:relative; border-left: 5px solid var(--amber);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .mcard h3{ font-family:'Space Grotesk', sans-serif; margin: 0 0 2px; font-size: 16px; }
+  .mcard:hover{ transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1); }
+  .mcard h3{ font-family:'Space Grotesk', sans-serif; margin: 0 0 2px; font-size: 16px; color: var(--chalk); }
   .mcard .prof{ font-size: 12.5px; color: var(--ink-dim); margin-bottom: 10px; }
-  .mcard .faltas-line{ font-family:'IBM Plex Mono', monospace; font-size: 12px; display:flex; justify-content:space-between; margin-bottom:6px; }
-  .bar{ height:6px; border-radius:99px; background: var(--surface-dim); overflow:hidden; margin-bottom: 10px; }
+  .mcard .faltas-line{ font-family:'IBM Plex Mono', monospace; font-size: 12px; display:flex; justify-content:space-between; margin-bottom:6px; color: var(--chalk); }
+  .bar{ height:6px; border-radius:99px; background: rgba(255,255,255,0.1); overflow:hidden; margin-bottom: 10px; }
   .bar > div{ height:100%; background: var(--sage); transition: width 0.3s ease, background 0.3s ease; }
   .mcard .actions{ display:flex; gap:6px; flex-wrap:wrap; }
   .mcard .actions button{ font-size:11.5px; }
@@ -125,19 +227,24 @@
     min-height: 120px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:600;
     transition: all 0.2s ease;
   }
-  .addcard:hover{ border-color: var(--amber); color: var(--amber); background: rgba(232,163,61,0.05); }
+  .addcard:hover{ border-color: var(--amber); color: var(--amber); background: rgba(var(--amber-rgb),0.05); }
 
   /* ---- Inasistencias & Visor de Semanas ---- */
   .flist{ display:flex; flex-direction:column; gap: 10px; }
   .frow{
-    background: var(--surface); border-radius: var(--radius); padding: 14px 16px;
-    color: var(--ink); display:flex; align-items:center; gap: 14px; flex-wrap:wrap;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 14px 16px;
+    color: var(--chalk); display:flex; align-items:center; gap: 14px; flex-wrap:wrap;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .frow .dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .frow .name{ font-family:'Space Grotesk',sans-serif; font-weight:600; flex: 1 1 140px; }
+  .frow .name{ font-family:'Space Grotesk',sans-serif; font-weight:600; flex: 1 1 140px; color: var(--chalk); }
   .frow .count{ font-family:'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-dim); }
   .history{ font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-dim); flex-basis:100%; }
-  .history span{ display:inline-flex; align-items:center; gap:4px; background: var(--surface-dim); border-radius:6px; padding: 2px 7px; margin: 3px 4px 0 0; }
+  .history span{ display:inline-flex; align-items:center; gap:4px; background: rgba(255,255,255,0.08); border-radius:6px; padding: 2px 7px; margin: 3px 4px 0 0; color: var(--chalk); }
   .history button{ background:none; border:none; color: var(--coral); cursor:pointer; font-size:12px; padding:0; }
 
   .week-cards-grid{
@@ -145,35 +252,41 @@
     max-height: 520px; overflow-y: auto; padding-right: 4px; margin-bottom: 24px;
   }
   .week-card{
-    background: var(--surface); border-radius: var(--radius); padding: 14px 16px;
-    color: var(--ink); position: relative; border: 1.5px solid var(--surface-dim);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 14px 16px;
+    color: var(--chalk); position: relative;
     display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.07);
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  .week-card:hover{ transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
+  .week-card:hover{ transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.1); }
   .week-card.current{
-    border-color: var(--amber); box-shadow: 0 0 14px rgba(232,163,61,0.35);
+    border-color: var(--amber); box-shadow: 0 0 20px rgba(var(--amber-rgb),0.3), inset 0 1px 0 rgba(255,255,255,0.1);
   }
   .week-card-header{ display: flex; justify-content: space-between; align-items: flex-start; }
-  .week-card-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
+  .week-card-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--chalk); }
   .week-card-dates{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
   .week-card-badge{
     font-size: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
     padding: 2px 7px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em;
   }
-  .week-card-badge.current{ background: var(--amber); color: #241705; }
-  .week-card-badge.past{ background: var(--surface-dim); color: var(--ink-dim); }
-  .week-card-badge.future{ background: rgba(127,166,135,0.2); color: #2c5435; }
+  .week-card-badge.current{ background: var(--amber); color: var(--amber-text); }
+  .week-card-badge.past{ background: rgba(255,255,255,0.1); color: var(--ink-dim); }
+  .week-card-badge.future{ background: rgba(127,166,135,0.25); color: #a8d4b0; }
 
   .week-note-item{
-    background: #fff; border-radius: 8px; padding: 10px 12px; font-size: 12px;
+    background: rgba(255,255,255,0.07); border-radius: 8px; padding: 10px 12px; font-size: 12px;
     display: flex; flex-direction: column; gap: 6px;
-    border-left: 4px solid var(--amber); box-shadow: 0 1.5px 4px rgba(0,0,0,0.06);
-    transition: transform 0.1s ease;
+    border-left: 4px solid var(--amber);
+    box-shadow: 0 1.5px 6px rgba(0,0,0,0.15);
+    transition: transform 0.1s ease, background 0.15s ease;
   }
-  .week-note-item:hover{ transform: translateY(-1px); }
+  .week-note-item:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.1); }
   .week-note-title-row{ display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .week-note-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); line-height: 1.35; word-break: break-word; }
+  .week-note-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--chalk); line-height: 1.35; word-break: break-word; }
   .week-note-actions{ display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
   .week-note-actions button{ background: none; border: none; cursor: pointer; font-size: 12px; padding: 1px 3px; opacity: 0.7; transition: opacity 0.15s ease; }
   .week-note-actions button:hover{ opacity: 1; }
@@ -183,71 +296,148 @@
 
   /* ---- buttons ---- */
   button.primary{
-    background: var(--amber); color:#241705; border:none; border-radius: 999px;
+    background: var(--amber); color: var(--amber-text); border:none; border-radius: 999px;
     padding: 8px 16px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer;
-    transition: transform 0.1s ease, opacity 0.15s ease;
+    transition: transform 0.11s ease, opacity 0.15s ease;
   }
   button.primary:hover{ opacity: 0.95; }
   button.primary:active{ transform: scale(0.98); }
 
   button.ghost{
-    background: transparent; border: 1px solid rgba(38,37,31,0.25); color: var(--ink);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: var(--chalk);
     border-radius: 999px; padding: 6px 12px; font-size: 12.5px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
     transition: all 0.15s ease;
   }
   button.ghost.danger{ color: var(--coral); border-color: rgba(214,96,60,0.4); }
-  button.ghost:hover{ background: rgba(38,37,31,0.06); }
+  button.ghost:hover{ background: rgba(255,255,255,0.12); }
 
   /* ---- modal ---- */
   .overlay{
-    position:fixed; inset:0; background: rgba(21,40,32,0.75); display:none;
+    position:fixed; inset:0; background: rgba(0,0,0,0.55); display:none;
     align-items:center; justify-content:center; padding: 20px; z-index: 50;
-    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
   .overlay.active{ display:flex; }
   .modal{
-    background: var(--surface); color: var(--ink); border-radius: 14px; padding: 22px;
+    background: rgba(255,255,255,0.08);
+    -webkit-backdrop-filter: blur(32px) saturate(1.6);
+    backdrop-filter: blur(32px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: var(--chalk); border-radius: 16px; padding: 22px;
     width: 100%; max-width: 420px; max-height: 88vh; overflow-y:auto;
-    box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
   }
-  .modal h2{ font-family:'Space Grotesk',sans-serif; margin: 0 0 16px; font-size:18px; }
+  .modal h2{ font-family:'Space Grotesk',sans-serif; margin: 0 0 16px; font-size:18px; color: var(--chalk); }
   .field{ margin-bottom: 14px; }
-  .field label{ display:block; font-size: 12px; font-weight:600; margin-bottom:5px; color: var(--ink-dim); text-transform:uppercase; letter-spacing:.04em; }
+  .field label, .field-label{ display:block; font-size: 12px; font-weight:600; margin-bottom:5px; color: var(--ink-dim); text-transform:uppercase; letter-spacing:.04em; }
   .field input, .field select{
-    width:100%; padding: 9px 10px; border-radius:7px; border: 1px solid var(--surface-dim);
-    background: #fff; font-family:'IBM Plex Sans',sans-serif; font-size: 14px; color: var(--ink);
+    width:100%; padding: 9px 10px; border-radius:7px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    font-family:'IBM Plex Sans',sans-serif; font-size: 14px; color: var(--chalk);
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .field input:focus, .field select:focus{
+    border-color: var(--amber);
+    background: rgba(255,255,255,0.1);
+  }
+  .field input::placeholder{ color: var(--ink-dim); }
+  .field input[readonly], .field input[disabled], input[readonly], input[disabled]{
+    background: rgba(0,0,0,0.2) !important;
+    color: var(--chalk) !important;
+    border: 1px dashed var(--glass-border) !important;
+    cursor: not-allowed !important;
+    opacity: 0.9;
+  }
+  .field input[readonly]::placeholder, input[readonly]::placeholder{
+    color: var(--chalk-dim) !important;
+    font-style: italic;
   }
   .day-chip{
     display:inline-flex; align-items:center; justify-content:center;
-    padding: 7px 12px; border-radius: 6px; border: 1px solid var(--surface-dim);
-    background: #fff; cursor: pointer; font-size: 13px; font-family:'Space Grotesk', sans-serif;
-    font-weight: 600; color: var(--ink); user-select: none; transition: all 0.15s ease;
+    padding: 7px 12px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06); cursor: pointer; font-size: 13px; font-family:'Space Grotesk', sans-serif;
+    font-weight: 600; color: var(--chalk);
+    -webkit-user-select: none;
+    user-select: none; transition: all 0.15s ease;
   }
   .day-chip input{ display:none; }
-  .day-chip.sel{ background: var(--amber); color: #241705; border-color: var(--amber); }
+  .day-chip.sel{ background: var(--amber); color: var(--amber-text); border-color: var(--amber); }
 
   .colorrow{ display:flex; gap:8px; flex-wrap:wrap; }
   .swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; border: 2px solid transparent; transition: transform 0.15s ease; }
   .swatch:hover{ transform: scale(1.1); }
-  .swatch.sel{ border-color: var(--ink); transform: scale(1.15); }
+  .swatch.sel{ border-color: rgba(255,255,255,0.8); transform: scale(1.15); }
   .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top: 18px; }
   .empty{ color: var(--chalk-dim); font-family:'IBM Plex Mono', monospace; font-size: 13px; padding: 30px 4px; text-align:center; }
+  /* ---- Selects: estilo dinámico según tema ---- */
+  select{
+    background: var(--select-bg, rgba(0,0,0,0.45)) !important;
+    color: var(--chalk) !important;
+    border: 1px solid var(--glass-border) !important;
+  }
+  select option{
+    background: var(--option-bg, #1a2e1e);
+    color: var(--option-color, #F4F1E6);
+  }
+  select option:checked{
+    background: var(--option-checked-bg, #2e4a30);
+  }
   @media (max-width: 640px){
     .schedule-grid{ grid-template-columns: 48px repeat(5, 1fr); }
     .g-head{ font-size: 9.5px; }
     .g-block{ font-size:10px; padding: 4px; }
     .g-block b{ font-size:10.5px; }
   }
+
+  /* ---- Animaciones de Carga y Paneles ---- */
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  @keyframes panelFadeIn {
+    from { opacity: 0; transform: translateY(5px) scale(0.995); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .panel.active {
+    display: block;
+    animation: panelFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 </style>
 </head>
 <body>
+
+<!-- Barra de progreso superior al cambiar de pestañas -->
+<div id="tab-progress-bar" style="position:fixed; top:0; left:0; height:3px; width:0%; background:var(--amber); z-index:9990; transition:width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; box-shadow:0 0 12px var(--amber); opacity:0; pointer-events:none;"></div>
+
+<!-- Splash Screen / Loader Inicial al entrar a la página -->
+<div id="app-loader" style="position:fixed; inset:0; z-index:9999; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; transition:opacity 0.35s ease, visibility 0.35s ease;">
+  <div style="position:relative; width:64px; height:64px; display:flex; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; border-radius:50%; border:3px solid rgba(var(--amber-rgb), 0.18); border-top-color:var(--amber); animation: spin 0.85s linear infinite;"></div>
+    <svg width="30" height="30" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="64" height="64" rx="14" fill="var(--bg-deep)"/>
+      <rect x="10" y="10" width="44" height="12" rx="4" fill="var(--amber)"/>
+      <rect x="10" y="26" width="12" height="10" rx="2.5" fill="var(--amber)" opacity=".85"/>
+      <rect x="26" y="26" width="12" height="10" rx="2.5" fill="var(--amber)" opacity=".55"/>
+      <rect x="42" y="26" width="12" height="10" rx="2.5" fill="var(--amber)" opacity=".55"/>
+      <rect x="10" y="40" width="12" height="10" rx="2.5" fill="var(--amber)" opacity=".4"/>
+      <rect x="26" y="40" width="12" height="10" rx="2.5" fill="var(--sage)" opacity=".8"/>
+      <rect x="42" y="40" width="12" height="10" rx="2.5" fill="var(--amber)" opacity=".4"/>
+    </svg>
+  </div>
+  <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; color:var(--chalk); letter-spacing:-0.01em;">Mi Semestre</div>
+  <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk-dim);">Cargando tu horario...</div>
+</div>
+
 <div class="wrap">
 
   <header class="top">
     <div class="brand">
       <div style="display:flex; align-items:center; gap:8px;">
         <h1 style="margin:0;">Mi Semestre</h1>
-        <span id="active-semester-badge" style="font-family:'Space Grotesk',sans-serif; font-size:11.5px; font-weight:700; background:rgba(232,163,61,0.18); color:var(--amber); padding:3px 10px; border-radius:99px;">—</span>
+        <span id="active-semester-badge" style="font-family:'Space Grotesk',sans-serif; font-size:11.5px; font-weight:700; background:rgba(var(--amber-rgb),0.18); color:var(--amber); padding:3px 10px; border-radius:99px;">—</span>
       </div>
       <div class="sub" id="today-label">—</div>
     </div>
@@ -272,10 +462,10 @@
 
   <section class="panel active" id="panel-horario">
     <!-- Barra de progreso del curso / semestre -->
-    <div class="progress-card" style="background:var(--surface); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px; color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,0.2);">
+    <div class="progress-card" style="background:var(--glass); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border:1px solid var(--glass-border); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px; color:var(--chalk); box-shadow:0 6px 18px rgba(0,0,0,0.2);">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
         <div>
-          <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--ink);">Progreso del Semestre</span>
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--chalk);">Progreso del Semestre</span>
           <span id="course-dates-label" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim); margin-left:8px;">—</span>
         </div>
         <span id="course-pct-label" style="font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--amber);">0%</span>
@@ -293,7 +483,7 @@
       <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:var(--chalk-dim);">Configuración de Horario</span>
       <div style="display:flex; align-items:center; gap:8px;">
         <label for="shift-select" style="font-size:12px; font-weight:600; color:var(--chalk-dim); text-transform:uppercase; letter-spacing:.04em;">Turno:</label>
-        <select id="shift-select" onchange="updateShift(this.value)" style="padding:6px 12px; border-radius:8px; border:1px solid var(--rule); font-family:'IBM Plex Sans',sans-serif; font-size:13px; background:var(--surface); color:var(--ink); font-weight:600; cursor:pointer;">
+        <select id="shift-select" title="Seleccionar turno de horario" aria-label="Turno de horario" onchange="updateShift(this.value)" style="padding:6px 12px; border-radius:8px; border:1px solid var(--glass-border); font-family:'IBM Plex Sans',sans-serif; font-size:13px; background:rgba(255,255,255,0.08); color:var(--chalk); font-weight:600; cursor:pointer;">
           <option value="vespertino" selected>Vespertino (2:00 PM - 8:00 PM)</option>
           <option value="matutino">Matutino (7:00 AM - 3:00 PM)</option>
           <option value="nocturno">Nocturno (4:00 PM - 10:00 PM)</option>
@@ -328,8 +518,8 @@
       <p style="font-size:13px; color:var(--ink-dim); margin:0 0 20px;">Crea espacios de trabajo independientes desde cero para cada periodo escolar o alterna fácilmente entre semestres creados.</p>
       
       <div class="field">
-        <label>Semestre Activo</label>
-        <select id="cfg-semester-select" onchange="switchSemester(this.value)"></select>
+        <label for="cfg-semester-select">Semestre Activo</label>
+        <select id="cfg-semester-select" title="Seleccionar semestre activo" aria-label="Semestre Activo" onchange="switchSemester(this.value)"></select>
       </div>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;">
@@ -340,33 +530,104 @@
     </div>
 
     <!-- Card 2: Fechas del Semestre Activo -->
-    <div class="grid-card" style="max-width:540px; margin:0 auto; padding:24px;">
+    <div class="grid-card" style="max-width:540px; margin:0 auto 20px; padding:24px;">
       <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:20px; color:var(--ink);">Fechas del Semestre Activo</h2>
       <p style="font-size:13px; color:var(--ink-dim); margin:0 0 20px;">Define las fechas oficiales de inicio y término para calcular el avance semanal del semestre en tu horario.</p>
       
       <div class="field">
-        <label>Fecha de inicio del curso</label>
-        <input type="date" id="cfg-start-date">
+        <label for="cfg-start-date">Fecha de inicio del curso</label>
+        <input type="date" id="cfg-start-date" title="Fecha de inicio del curso">
       </div>
       <div class="field">
-        <label>Fecha de fin del curso</label>
-        <input type="date" id="cfg-end-date">
+        <label for="cfg-end-date">Fecha de fin del curso</label>
+        <input type="date" id="cfg-end-date" title="Fecha de fin del curso">
       </div>
       <div class="modal-actions" style="margin-top:22px;">
         <button class="primary" onclick="saveSettings()">Guardar Configuración</button>
       </div>
     </div>
 
-    <!-- Card 3: Backup en la Nube y Copia Local -->
+    <!-- Card 3: Configuración de horarios de turnos -->
+    <div class="grid-card" style="max-width:540px; margin:0 auto 20px; padding:24px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:20px; color:var(--ink);">Horarios de Turnos</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 20px;">Personaliza la hora de inicio y fin de cada turno. Los cambios afectan las filas visibles en la vista de Horario al seleccionar ese turno.</p>
+
+      <div style="display:flex; flex-direction:column; gap:14px;">
+
+        <!-- Fila de encabezados -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center;">
+          <span style="font-size:11px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em;">Turno</span>
+          <span style="font-size:11px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em;">Inicio</span>
+          <span style="font-size:11px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em;">Fin</span>
+        </div>
+
+        <!-- Vespertino -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--chalk);">🌇 Vespertino</span>
+          <label for="shift-start-vespertino" class="sr-only">Hora de inicio del turno vespertino</label>
+          <select id="shift-start-vespertino" title="Hora de inicio del turno vespertino" aria-label="Hora de inicio del turno vespertino" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+          <label for="shift-end-vespertino" class="sr-only">Hora de fin del turno vespertino</label>
+          <select id="shift-end-vespertino" title="Hora de fin del turno vespertino" aria-label="Hora de fin del turno vespertino" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+        </div>
+
+        <!-- Matutino -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--chalk);">🌅 Matutino</span>
+          <label for="shift-start-matutino" class="sr-only">Hora de inicio del turno matutino</label>
+          <select id="shift-start-matutino" title="Hora de inicio del turno matutino" aria-label="Hora de inicio del turno matutino" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+          <label for="shift-end-matutino" class="sr-only">Hora de fin del turno matutino</label>
+          <select id="shift-end-matutino" title="Hora de fin del turno matutino" aria-label="Hora de fin del turno matutino" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+        </div>
+
+        <!-- Nocturno -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--chalk);">🌙 Nocturno</span>
+          <label for="shift-start-nocturno" class="sr-only">Hora de inicio del turno nocturno</label>
+          <select id="shift-start-nocturno" title="Hora de inicio del turno nocturno" aria-label="Hora de inicio del turno nocturno" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+          <label for="shift-end-nocturno" class="sr-only">Hora de fin del turno nocturno</label>
+          <select id="shift-end-nocturno" title="Hora de fin del turno nocturno" aria-label="Hora de fin del turno nocturno" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+        </div>
+
+        <!-- Jornada Completa -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--chalk);">☀️ Completo</span>
+          <label for="shift-start-completo" class="sr-only">Hora de inicio del turno completo</label>
+          <select id="shift-start-completo" title="Hora de inicio del turno completo" aria-label="Hora de inicio del turno completo" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+          <label for="shift-end-completo" class="sr-only">Hora de fin del turno completo</label>
+          <select id="shift-end-completo" title="Hora de fin del turno completo" aria-label="Hora de fin del turno completo" style="padding:7px 8px; border-radius:7px; border:1px solid var(--glass-border); font-family:'IBM Plex Mono',sans-serif; font-size:13px; background:rgba(255,255,255,0.07); color:var(--chalk);"></select>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:14px; font-size:11.5px;">💡 La hora de fin es cuando termina la última clase (ej. fin=20 → la última franja comienza a las 7:00 PM).</div>
+      <div class="modal-actions" style="margin-top:18px;">
+        <button class="primary" onclick="saveShiftConfig()">Guardar Horarios de Turnos</button>
+      </div>
+    </div>
+
+    <!-- Card 4: Tema de Color -->
+    <div class="grid-card" style="max-width:540px; margin:0 auto 20px; padding:24px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:20px; color:var(--ink);">Tema de Color</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 20px;">Elige el color de fondo de la aplicación. La barra del navegador también cambiará al mismo color automáticamente.</p>
+      <div id="theme-swatches" role="group" aria-label="Seleccionar tema de color" style="display:flex; flex-wrap:wrap; gap:14px; align-items:center;"></div>
+      <p id="theme-name-label" style="font-size:12px; color:var(--ink-dim); margin:14px 0 0; font-family:'IBM Plex Mono',monospace; min-height:18px;"></p>
+
+      <hr style="border:none; border-top:1px solid var(--glass-border); margin:22px 0 18px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif; margin:0 0 6px; font-size:16px; color:var(--ink);">Color de Acento</h3>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 18px;">Cambia el color que resalta botones, pestañas activas, estadísticas y bordes.</p>
+      <div id="accent-swatches" role="group" aria-label="Seleccionar color de acento" style="display:flex; flex-wrap:wrap; gap:14px; align-items:center;"></div>
+      <p id="accent-name-label" style="font-size:12px; color:var(--ink-dim); margin:14px 0 0; font-family:'IBM Plex Mono',monospace; min-height:18px;"></p>
+    </div>
+
+    <!-- Card 5: Backup en la Nube y Copia Local -->
     <div class="grid-card" style="max-width:540px; margin:20px auto 0; padding:24px;">
       <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 4px; font-size:20px; color:var(--ink);">☁️ Backup en la Nube</h2>
       <p style="font-size:13px; color:var(--ink-dim); margin:0 0 18px;">Guarda o restaura todos tus semestres en un repositorio privado de GitHub. La contraseña protege el acceso al servidor.</p>
 
       <div class="field">
-        <label>Contraseña de Backup</label>
+        <label for="cloud-password">Contraseña de Backup</label>
         <div style="display:flex; gap:6px; align-items:center;">
-          <input type="password" id="cloud-password" placeholder="••••••••" autocomplete="current-password" style="flex:1;">
-          <button type="button" onclick="toggleCloudPasswordVisibility()" id="btn-toggle-pwd" title="Mostrar / ocultar contraseña" style="background:none; border:1px solid var(--surface-dim); border-radius:7px; padding:8px 10px; cursor:pointer; font-size:14px; flex-shrink:0;">👁</button>
+          <input type="password" id="cloud-password" placeholder="••••••••" autocomplete="current-password" title="Contraseña de backup" aria-label="Contraseña de backup" style="flex:1;">
+          <button type="button" onclick="toggleCloudPasswordVisibility()" id="btn-toggle-pwd" title="Mostrar u ocultar contraseña" style="background:none; border:1px solid var(--glass-border); border-radius:7px; padding:8px 10px; cursor:pointer; font-size:14px; flex-shrink:0;">👁</button>
         </div>
       </div>
 
@@ -377,12 +638,26 @@
 
       <div id="cloud-status" style="display:none; margin-top:14px; padding:10px 14px; border-radius:8px; font-size:12.5px; font-family:'IBM Plex Mono',monospace; line-height:1.5;"></div>
 
-      <hr style="border:none; border-top:1px solid var(--surface-dim); margin:20px 0 16px;">
+      <hr style="border:none; border-top:1px solid var(--glass-border); margin:20px 0 16px;">
       <p style="font-size:12px; color:var(--ink-dim); margin:0 0 10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Backup Local (sin contraseña)</p>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="ghost" type="button" onclick="exportBackupJson()" style="font-size:12px;">📥 Exportar .json</button>
         <button class="ghost" type="button" onclick="triggerImportJson()" style="font-size:12px;">📤 Importar .json</button>
-        <input type="file" id="json-import-file" accept=".json" style="display:none;" onchange="handleImportJson(this)">
+        <label for="json-import-file" class="sr-only">Seleccionar archivo JSON de copia de seguridad</label>
+        <input type="file" id="json-import-file" accept=".json" title="Seleccionar archivo JSON de copia de seguridad" aria-label="Archivo de copia de seguridad JSON" style="display:none;" onchange="handleImportJson(this)">
+      </div>
+    </div>
+
+    <!-- Card 6: Aplicación PWA e Instalación -->
+    <div class="grid-card" style="max-width:540px; margin:20px auto 0; padding:24px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 4px; font-size:20px; color:var(--ink);">📲 Aplicación PWA</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 16px;">Instala Mi Semestre en tu teléfono o computadora para usarla sin conexión a internet como una app nativa.</p>
+      
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="font-size:12.5px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;">
+          <span id="pwa-status-badge" style="background:rgba(127,166,135,0.2); color:var(--sage); padding:3px 10px; border-radius:99px; font-weight:600;">✓ Modo Offline Listo</span>
+        </div>
+        <button class="primary" type="button" id="btn-pwa-install" onclick="installPWA()" style="display:none; font-size:12.5px;">📲 Instalar Aplicación</button>
       </div>
     </div>
   </section>
@@ -394,7 +669,7 @@
   <div class="modal">
     <h2 id="semester-modal-title">Nuevo Semestre</h2>
     <div class="field">
-      <label>Nombre del Semestre / Espacio de Trabajo</label>
+      <label for="sem-name">Nombre del Semestre / Espacio de Trabajo</label>
       <input type="text" id="sem-name" placeholder="Ej. Semestre 2026-B / Verano 2027">
     </div>
     <div class="hint" style="margin-top:-6px; margin-bottom:16px; font-size:11.5px; color:var(--ink-dim);">
@@ -414,24 +689,24 @@
   <div class="modal">
     <h2 id="materia-modal-title">Nueva materia</h2>
     <div class="field">
-      <label>Nombre</label>
+      <label for="m-nombre">Nombre</label>
       <input type="text" id="m-nombre" placeholder="Cálculo diferencial">
     </div>
     <div class="field">
-      <label>Profesor</label>
+      <label for="m-profesor">Profesor</label>
       <input type="text" id="m-profesor" placeholder="Ing. Ramírez">
     </div>
     <div class="field">
-      <label>Descripción / Salón</label>
+      <label for="m-descripcion">Descripción / Salón</label>
       <input type="text" id="m-descripcion" placeholder="Ej. Edificio B - Salón 201 / Grupo A">
     </div>
     <div class="field">
-      <label>Límite de faltas</label>
+      <label for="m-limite">Límite de faltas</label>
       <input type="number" id="m-limite" value="5" min="1">
     </div>
     <div class="field">
-      <label>Color</label>
-      <div class="colorrow" id="m-colors"></div>
+      <span class="field-label" id="lbl-m-colors">Color</span>
+      <div class="colorrow" id="m-colors" role="group" aria-labelledby="lbl-m-colors"></div>
     </div>
     <div class="modal-actions">
       <button class="ghost" onclick="closeMateriaModal()">Cancelar</button>
@@ -445,29 +720,38 @@
   <div class="modal">
     <h2 id="slot-modal-title">Asignar horario de clase</h2>
     <div class="field">
-      <label>Materia</label>
-      <select id="slot-materia"></select>
+      <label for="slot-materia">Materia</label>
+      <select id="slot-materia" title="Seleccionar materia" aria-label="Materia"></select>
     </div>
     <div class="field">
-      <label>Día(s) de clase</label>
-      <div id="slot-days-checkboxes" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+      <span class="field-label" id="lbl-slot-days">Día(s) de clase</span>
+      <div id="slot-days-checkboxes" role="group" aria-labelledby="lbl-slot-days" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
       <div class="field">
-        <label>Hora de inicio</label>
-        <select id="slot-start-hour"></select>
+        <label for="slot-start-time">Hora de inicio</label>
+        <input type="time" id="slot-start-time" step="300" title="Hora de inicio" aria-label="Hora de inicio" style="padding:8px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.15); font-family:'IBM Plex Mono',monospace; font-size:14px; background:rgba(255,255,255,0.07); color:var(--chalk); width:100%;">
       </div>
       <div class="field">
-        <label>Hora de fin</label>
-        <select id="slot-end-hour"></select>
+        <label for="slot-end-time">Hora de fin</label>
+        <input type="time" id="slot-end-time" step="300" title="Hora de fin" aria-label="Hora de fin" style="padding:8px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.15); font-family:'IBM Plex Mono',monospace; font-size:14px; background:rgba(255,255,255,0.07); color:var(--chalk); width:100%;">
       </div>
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:-6px; margin-bottom:14px; align-items:center;">
+      <span style="font-size:11px; color:var(--ink-dim); font-weight:600;">Duración rápida:</span>
+      <button type="button" class="ghost" onclick="setSlotDurationPreset(15)" style="font-size:11px; padding:2px 7px;">+15m</button>
+      <button type="button" class="ghost" onclick="setSlotDurationPreset(30)" style="font-size:11px; padding:2px 7px;">+30m</button>
+      <button type="button" class="ghost" onclick="setSlotDurationPreset(45)" style="font-size:11px; padding:2px 7px;">+45m</button>
+      <button type="button" class="ghost" onclick="setSlotDurationPreset(60)" style="font-size:11px; padding:2px 7px;">+1h</button>
+      <button type="button" class="ghost" onclick="setSlotDurationPreset(90)" style="font-size:11px; padding:2px 7px;">+1.5h</button>
+      <button type="button" class="ghost" onclick="setSlotDurationPreset(120)" style="font-size:11px; padding:2px 7px;">+2h</button>
     </div>
     <div class="field">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-        <label style="margin:0;">Descripción / Salón</label>
+        <label for="slot-aula" style="margin:0;">Descripción / Salón</label>
         <span id="slot-desc-badge" style="display:none; font-size:11px; color:#D6603C; background:rgba(214,96,60,0.12); padding:2px 8px; border-radius:99px; font-weight:600; font-family:'IBM Plex Mono',monospace;">⚠️ Sin descripción guardada</span>
       </div>
-      <input type="text" id="slot-aula" readonly style="background:var(--surface-dim); cursor:not-allowed; opacity:0.9;" placeholder="Sin descripción asignada en la pestaña Materias">
+      <input type="text" id="slot-aula" readonly placeholder="Sin descripción asignada en la pestaña Materias">
       <div id="slot-desc-hint" style="display:none; font-size:11.5px; color:var(--ink-dim); margin-top:4px; font-family:'IBM Plex Mono',monospace;">
         💡 Puedes agregar o cambiar la descripción editando la materia desde la pestaña <b>Materias</b>.
       </div>
@@ -487,23 +771,23 @@
   <div class="modal">
     <h2 id="week-note-modal-title">Nota de semana</h2>
     <div class="field">
-      <label>Semana del curso</label>
-      <select id="wn-week-select"></select>
+      <label for="wn-week-select">Semana del curso</label>
+      <select id="wn-week-select" title="Seleccionar semana del curso" aria-label="Semana del curso"></select>
     </div>
     <div class="field">
-      <label>Nota / Recordatorio</label>
+      <label for="wn-text">Nota / Recordatorio</label>
       <input type="text" id="wn-text" placeholder="Ej. Entregar proyecto final / Examen parcial">
     </div>
     <div class="field">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-        <label style="margin:0;">Materia(s) vinculada(s)</label>
+        <span class="field-label" id="lbl-wn-mats" style="margin:0;">Materia(s) vinculada(s)</span>
         <span id="wn-color-hint" style="font-size:11px; color:var(--amber); font-weight:600; font-family:'IBM Plex Mono',monospace;"></span>
       </div>
-      <div id="wn-materias-checkboxes" style="display:flex; gap:6px; flex-wrap:wrap; max-height:130px; overflow-y:auto; padding:4px 0;"></div>
+      <div id="wn-materias-checkboxes" role="group" aria-labelledby="lbl-wn-mats" style="display:flex; gap:6px; flex-wrap:wrap; max-height:130px; overflow-y:auto; padding:4px 0;"></div>
     </div>
     <div class="field">
-      <label>Color de Etiqueta</label>
-      <div class="colorrow" id="wn-colors"></div>
+      <span class="field-label" id="lbl-wn-colors">Color de Etiqueta</span>
+      <div class="colorrow" id="wn-colors" role="group" aria-labelledby="lbl-wn-colors"></div>
     </div>
     <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center;">
       <button class="ghost danger" id="btn-delete-week-note" type="button" style="display:none;" onclick="deleteCurrentWeekNote()">Eliminar nota</button>
@@ -518,12 +802,28 @@
 <script>
 const PALETTE = ['#E8A33D','#D6603C','#7FA687','#5B8CBF','#B37FBF','#C2A34D','#4F9D8F','#C46B8A'];
 const DAYS = ['Lun','Mar','Mié','Jue','Vie'];
-const SHIFTS = {
-  vespertino: [14, 15, 16, 17, 18, 19], // 2:00 PM - 8:00 PM (14:00 a 20:00)
-  matutino: [7, 8, 9, 10, 11, 12, 13, 14], // 7:00 AM - 3:00 PM
-  nocturno: [16, 17, 18, 19, 20, 21], // 4:00 PM - 10:00 PM
-  completo: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] // 7:00 AM - 9:00 PM
+// Defaults de turnos: { start (inclusivo), end (exclusivo) }
+const SHIFT_DEFAULTS = {
+  vespertino: { start: 14, end: 20 },
+  matutino:   { start: 7,  end: 15 },
+  nocturno:   { start: 16, end: 22 },
+  completo:   { start: 7,  end: 21 }
 };
+
+function getShiftHours(shiftKey){
+  const cfg = (data.config && data.config.shiftConfig) ? data.config.shiftConfig : {};
+  const s = cfg[shiftKey] || SHIFT_DEFAULTS[shiftKey] || SHIFT_DEFAULTS.vespertino;
+  const hours = [];
+  for(let h = s.start; h < s.end; h++) hours.push(h);
+  return hours;
+}
+
+function formatShiftLabel(shiftKey){
+  const cfg = (data.config && data.config.shiftConfig) ? data.config.shiftConfig : {};
+  const s = cfg[shiftKey] || SHIFT_DEFAULTS[shiftKey] || SHIFT_DEFAULTS.vespertino;
+  const labels = { vespertino: 'Vespertino', matutino: 'Matutino', nocturno: 'Nocturno', completo: 'Jornada Completa' };
+  return `${labels[shiftKey] || shiftKey} (${formatHour(s.start)} – ${formatHour(s.end)})`;
+}
 
 let rootData = {
   activeSemesterId: 'sem-default',
@@ -549,7 +849,16 @@ function createEmptySemesterData(){
     faltas: [],
     weekNotes: [],
     shift: 'vespertino',
-    config: { startDate: '', endDate: '' }
+    config: {
+      startDate: '',
+      endDate: '',
+      shiftConfig: {
+        vespertino: { start: 14, end: 20 },
+        matutino:   { start: 7,  end: 15 },
+        nocturno:   { start: 16, end: 22 },
+        completo:   { start: 7,  end: 21 }
+      }
+    }
   };
 }
 
@@ -587,10 +896,305 @@ function updateActiveDataReference(){
   }
 }
 
+// ---------- Utilidades de tiempo con minutos ----------
 function formatHour(h){
   const h12 = h % 12 === 0 ? 12 : h % 12;
   const ampm = h >= 12 ? 'PM' : 'AM';
   return `${h12}:00 ${ampm}`;
+}
+
+function parseToMinutes(val){
+  if(val === undefined || val === null || val === '') return 0;
+  if(typeof val === 'number'){ return Math.round(val * 60); }
+  if(typeof val === 'string'){
+    if(val.includes(':')){
+      const [h, m] = val.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    }
+    const num = parseFloat(val);
+    if(!isNaN(num)) return Math.round(num * 60);
+  }
+  return 0;
+}
+
+function minutesToTimeStr(totalMinutes){
+  let h = Math.floor(totalMinutes / 60);
+  let m = Math.round(totalMinutes % 60);
+  if(m >= 60){ h += 1; m -= 60; }
+  h = h % 24;
+  const hStr = h < 10 ? `0${h}` : `${h}`;
+  const mStr = m < 10 ? `0${m}` : `${m}`;
+  return `${hStr}:${mStr}`;
+}
+
+function formatTime(val){
+  const mins = parseToMinutes(val);
+  let h = Math.floor(mins / 60);
+  let m = Math.round(mins % 60);
+  if(m >= 60){ h += 1; m -= 60; }
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const mStr = m < 10 ? `0${m}` : `${m}`;
+  return `${h12}:${mStr} ${ampm}`;
+}
+
+function getSlotStartMinutes(slot){
+  if(slot.startTime !== undefined) return parseToMinutes(slot.startTime);
+  if(slot.startHour !== undefined) return parseToMinutes(slot.startHour);
+  if(slot.hour !== undefined) return parseToMinutes(slot.hour);
+  return 14 * 60;
+}
+
+function getSlotEndMinutes(slot){
+  if(slot.endTime !== undefined) return parseToMinutes(slot.endTime);
+  if(slot.endHour !== undefined) return parseToMinutes(slot.endHour);
+  if(slot.hour !== undefined) return parseToMinutes(slot.hour + 1);
+  return 15 * 60;
+}
+
+function setSlotDurationPreset(addMinutes){
+  const startVal = document.getElementById('slot-start-time').value;
+  if(!startVal) return;
+  const startMin = parseToMinutes(startVal);
+  const endMin = startMin + addMinutes;
+  document.getElementById('slot-end-time').value = minutesToTimeStr(endMin);
+}
+
+// ---- Acentos de Color ----
+const ACCENTS = [
+  { id:'amber',    name:'Ámbar',      hex:'#D97706', rgb:'217,119,6',   onAccent:'#FFFFFF' },
+  { id:'coral',    name:'Coral',      hex:'#D6603C', rgb:'214,96,60',   onAccent:'#FFFFFF' },
+  { id:'sky',      name:'Cielo',      hex:'#0284C7', rgb:'2,132,199',   onAccent:'#FFFFFF' },
+  { id:'mint',     name:'Menta',      hex:'#059669', rgb:'5,150,105',   onAccent:'#FFFFFF' },
+  { id:'lavender', name:'Lavanda',    hex:'#7C3AED', rgb:'124,58,237',  onAccent:'#FFFFFF' },
+  { id:'rose',     name:'Rosa',       hex:'#DB2777', rgb:'219,39,119',  onAccent:'#FFFFFF' },
+  { id:'lime',     name:'Lima',       hex:'#65A30D', rgb:'101,163,13',  onAccent:'#FFFFFF' },
+  { id:'gold',     name:'Oro',        hex:'#B45309', rgb:'180,83,9',    onAccent:'#FFFFFF' },
+  { id:'negro',    name:'Negro',      hex:'#000000', rgb:'0,0,0',       onAccent:'#FFFFFF', lightOnly:true },
+  { id:'blanco',   name:'Blanco',     hex:'#FFFFFF', rgb:'255,255,255', onAccent:'#111827', darkOnly:true },
+];
+
+// ---- Temas de Color ----
+const THEMES = [
+  { id:'verde-bosque',   name:'Verde Bosque',   bg:'#1F3A2E', bgDeep:'#152820', isLight:false },
+  { id:'azul-noche',    name:'Azul Noche',     bg:'#1A2B3C', bgDeep:'#111E2A', isLight:false },
+  { id:'purpura-oscuro',name:'Púrpura Oscuro', bg:'#2A1A3A', bgDeep:'#1C1028', isLight:false },
+  { id:'carbon',        name:'Carbón',         bg:'#1E1E1E', bgDeep:'#121212', isLight:false },
+  { id:'cacao',         name:'Cacao',           bg:'#2E1E14', bgDeep:'#1F140D', isLight:false },
+  { id:'azul-pizarra',  name:'Azul Pizarra',   bg:'#1E2A3A', bgDeep:'#131C28', isLight:false },
+  { id:'oliva',         name:'Oliva',           bg:'#2A2E1A', bgDeep:'#1C2012', isLight:false },
+  { id:'vinotinto',     name:'Vinotinto',       bg:'#2E1A22', bgDeep:'#1F1118', isLight:false },
+  { id:'gris-claro',    name:'Gris Claro',     bg:'#E5E7EB', bgDeep:'#D1D5DB', isLight:true  },
+];
+
+function isAccentCompatible(accentId, themeId){
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  const accent = ACCENTS.find(a => a.id === accentId) || ACCENTS[0];
+  if(accent.lightOnly && !theme.isLight) return false;
+  if(accent.darkOnly && theme.isLight) return false;
+  return true;
+}
+
+function getSafeAccent(accentId, themeId){
+  if(isAccentCompatible(accentId, themeId)) return accentId;
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  return theme.isLight ? 'negro' : 'amber';
+}
+
+function applyTheme(themeId){
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  const root = document.documentElement;
+  root.style.setProperty('--bg', theme.bg);
+  root.style.setProperty('--bg-deep', theme.bgDeep);
+
+  if(theme.isLight){
+    root.style.setProperty('--chalk', '#111827');
+    root.style.setProperty('--chalk-dim', 'rgba(17, 24, 39, 0.65)');
+    root.style.setProperty('--rule', 'rgba(17, 24, 39, 0.15)');
+    root.style.setProperty('--ink', '#111827');
+    root.style.setProperty('--ink-dim', 'rgba(17, 24, 39, 0.6)');
+    root.style.setProperty('--glass', 'rgba(255, 255, 255, 0.65)');
+    root.style.setProperty('--glass-border', 'rgba(0, 0, 0, 0.12)');
+    root.style.setProperty('--glass-hover', 'rgba(255, 255, 255, 0.85)');
+    root.style.setProperty('--dots-color', 'rgba(0, 0, 0, 0.07)');
+    root.style.setProperty('--select-bg', 'rgba(255, 255, 255, 0.85)');
+    root.style.setProperty('--option-bg', '#F3F4F6');
+    root.style.setProperty('--option-color', '#111827');
+    root.style.setProperty('--option-checked-bg', '#E5E7EB');
+  } else {
+    root.style.setProperty('--chalk', '#F4F1E6');
+    root.style.setProperty('--chalk-dim', 'rgba(244,241,230,0.55)');
+    root.style.setProperty('--rule', 'rgba(244,241,230,0.16)');
+    root.style.setProperty('--ink', '#F4F1E6');
+    root.style.setProperty('--ink-dim', 'rgba(244,241,230,0.5)');
+    root.style.setProperty('--glass', 'rgba(255,255,255,0.06)');
+    root.style.setProperty('--glass-border', 'rgba(255,255,255,0.12)');
+    root.style.setProperty('--glass-hover', 'rgba(255,255,255,0.1)');
+    root.style.setProperty('--dots-color', 'rgba(244,241,230,0.05)');
+    root.style.setProperty('--select-bg', 'rgba(0,0,0,0.45)');
+    root.style.setProperty('--option-bg', '#1a2e1e');
+    root.style.setProperty('--option-color', '#F4F1E6');
+    root.style.setProperty('--option-checked-bg', '#2e4a30');
+  }
+
+  let metaTC = document.querySelector('meta[name="theme-color"]');
+  if(!metaTC){
+    metaTC = document.createElement('meta');
+    metaTC.name = 'theme-color';
+    document.head.appendChild(metaTC);
+  }
+  metaTC.content = theme.bg;
+
+  document.querySelectorAll('.theme-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.themeId === themeId);
+  });
+  const lbl = document.getElementById('theme-name-label');
+  if(lbl) lbl.textContent = `✓ ${theme.name}`;
+
+  // Verificar si el acento actual es compatible con el nuevo tema
+  const currentAccent = (rootData && rootData.accent) || 'amber';
+  if(!isAccentCompatible(currentAccent, themeId)){
+    const safeAcc = getSafeAccent(currentAccent, themeId);
+    if(rootData) rootData.accent = safeAcc;
+    applyAccent(safeAcc);
+  } else {
+    applyAccent(currentAccent);
+  }
+
+  renderAccentSwatches();
+}
+
+function applyAccent(accentId){
+  const currentTheme = (rootData && rootData.theme) || 'verde-bosque';
+  const safeId = getSafeAccent(accentId, currentTheme);
+  const acc = ACCENTS.find(a => a.id === safeId) || ACCENTS[0];
+  const root = document.documentElement;
+  root.style.setProperty('--amber', acc.hex);
+  root.style.setProperty('--amber-rgb', acc.rgb);
+  root.style.setProperty('--amber-text', acc.onAccent);
+
+  document.querySelectorAll('.accent-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.accentId === safeId);
+  });
+  const lbl = document.getElementById('accent-name-label');
+  if(lbl) lbl.textContent = `✓ ${acc.name}`;
+}
+
+function renderAccentSwatches(){
+  const wrap = document.getElementById('accent-swatches');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const currentTheme = (rootData && rootData.theme) || 'verde-bosque';
+  const currentAccent = (rootData && rootData.accent) || 'amber';
+
+  ACCENTS.forEach(a => {
+    const isCompat = isAccentCompatible(a.id, currentTheme);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'accent-swatch' + (a.id === currentAccent ? ' active' : '') + (!isCompat ? ' disabled' : '');
+    btn.dataset.accentId = a.id;
+    btn.title = isCompat ? a.name : `${a.name} (Incompatible por legibilidad con este fondo)`;
+    btn.setAttribute('aria-label', isCompat ? a.name : `${a.name} (Incompatible)`);
+
+    const extraBorder = (a.hex.toLowerCase() === '#ffffff') ? 'border: 2px solid rgba(0,0,0,0.25);' : 'border: 3px solid transparent;';
+    const lockOverlay = !isCompat ? `<span style="font-size:12px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); border-radius:50%; color:#fff;" title="Incompatible por legibilidad">🔒</span>` : '';
+
+    btn.style.cssText = `
+      position:relative; width:38px; height:38px; border-radius:50%; background:${a.hex};
+      cursor:${isCompat ? 'pointer' : 'not-allowed'}; transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      ${extraBorder}
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15);
+      ${!isCompat ? 'opacity: 0.35; filter: grayscale(40%);' : ''}
+    `;
+    btn.innerHTML = lockOverlay;
+
+    if(isCompat){
+      btn.addEventListener('click', () => saveAccent(a.id));
+    }
+    btn.addEventListener('mouseenter', () => {
+      const lbl = document.getElementById('accent-name-label');
+      if(lbl){
+        lbl.textContent = isCompat ? a.name : `⚠️ ${a.name} (Incompatible por legibilidad)`;
+      }
+    });
+    btn.addEventListener('mouseleave', () => {
+      const lbl = document.getElementById('accent-name-label');
+      const cur = (rootData && rootData.accent) || 'amber';
+      const curA = ACCENTS.find(x => x.id === cur);
+      if(lbl && curA) lbl.textContent = `✓ ${curA.name}`;
+    });
+    wrap.appendChild(btn);
+  });
+
+  const lbl = document.getElementById('accent-name-label');
+  const curA = ACCENTS.find(a => a.id === currentAccent);
+  if(lbl && curA) lbl.textContent = `✓ ${curA.name}`;
+}
+
+function renderThemeSwatches(){
+  const wrap = document.getElementById('theme-swatches');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const current = (rootData && rootData.theme) || 'verde-bosque';
+  THEMES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'theme-swatch' + (t.id === current ? ' active' : '');
+    btn.dataset.themeId = t.id;
+    btn.title = t.name;
+    btn.setAttribute('aria-label', t.name);
+    const borderStyle = t.isLight ? 'border: 2px solid rgba(0,0,0,0.25);' : 'border: 3px solid transparent;';
+    btn.style.cssText = `
+      width:38px; height:38px; border-radius:50%; background:${t.bg};
+      cursor:pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;
+      ${borderStyle}
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15);
+    `;
+    btn.addEventListener('click', () => saveTheme(t.id));
+    btn.addEventListener('mouseenter', () => {
+      const lbl = document.getElementById('theme-name-label');
+      if(lbl) lbl.textContent = t.name;
+    });
+    btn.addEventListener('mouseleave', () => {
+      const lbl = document.getElementById('theme-name-label');
+      const cur = (rootData && rootData.theme) || 'verde-bosque';
+      const curTheme = THEMES.find(x => x.id === cur);
+      if(lbl && curTheme) lbl.textContent = `✓ ${curTheme.name}`;
+    });
+    wrap.appendChild(btn);
+  });
+  const lbl = document.getElementById('theme-name-label');
+  const curTheme = THEMES.find(t => t.id === current);
+  if(lbl && curTheme) lbl.textContent = `✓ ${curTheme.name}`;
+}
+
+// CSS del swatch activo — inyectado una sola vez
+(function(){
+  const style = document.createElement('style');
+  style.textContent = `
+    .theme-swatch:hover { transform: scale(1.15); box-shadow: 0 4px 14px rgba(0,0,0,0.45) !important; }
+    .theme-swatch.active { border-color: var(--amber) !important; transform: scale(1.12); box-shadow: 0 0 0 3px var(--amber), 0 4px 14px rgba(0,0,0,0.45) !important; }
+    .accent-swatch:hover:not(.disabled) { transform: scale(1.15); box-shadow: 0 4px 14px rgba(0,0,0,0.35) !important; }
+    .accent-swatch.active { border-color: var(--chalk) !important; transform: scale(1.12); box-shadow: 0 0 0 3px var(--amber), 0 4px 14px rgba(0,0,0,0.35) !important; }
+  `;
+  document.head.appendChild(style);
+})();
+
+function saveAccent(accentId){
+  if(!rootData) return;
+  const safeId = getSafeAccent(accentId, rootData.theme || 'verde-bosque');
+  rootData.accent = safeId;
+  applyAccent(safeId);
+  renderAccentSwatches();
+  saveData();
+}
+
+function saveTheme(themeId){
+  if(!rootData) return;
+  rootData.theme = themeId;
+  applyTheme(themeId);
+  renderThemeSwatches();
+  saveData();
 }
 
 async function loadData(){
@@ -624,7 +1228,19 @@ async function loadData(){
     console.warn('Cargando almacenamiento por defecto:', e);
   }
   updateActiveDataReference();
+  applyTheme((rootData && rootData.theme) || 'verde-bosque');
+  applyAccent((rootData && rootData.accent) || 'amber');
   render();
+  hideAppLoader();
+}
+
+function hideAppLoader(){
+  const loader = document.getElementById('app-loader');
+  if(loader){
+    loader.style.opacity = '0';
+    loader.style.visibility = 'hidden';
+    setTimeout(() => { try{ loader.remove(); }catch(e){} }, 400);
+  }
 }
 
 async function saveData(){
@@ -797,7 +1413,7 @@ function setCloudStatus(type, msg){
   const el = document.getElementById('cloud-status');
   if(!el) return;
   const styles = {
-    loading: 'background:rgba(232,163,61,0.12); color:var(--amber); border:1px solid rgba(232,163,61,0.3);',
+    loading: `background:rgba(var(--amber-rgb),0.12); color:var(--amber); border:1px solid rgba(var(--amber-rgb),0.3);`,
     success: 'background:rgba(127,166,135,0.15); color:#2c5435; border:1px solid rgba(127,166,135,0.4);',
     error:   'background:rgba(214,96,60,0.12);  color:#8c3520; border:1px solid rgba(214,96,60,0.3);'
   };
@@ -941,7 +1557,24 @@ function setDateLabel(){
   document.getElementById('today-label').textContent = fmt.charAt(0).toUpperCase()+fmt.slice(1);
 }
 
+function triggerTabLoader(){
+  const bar = document.getElementById('tab-progress-bar');
+  if(!bar) return;
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  bar.style.opacity = '1';
+  requestAnimationFrame(() => {
+    bar.style.transition = 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease';
+    bar.style.width = '100%';
+    setTimeout(() => {
+      bar.style.opacity = '0';
+      setTimeout(() => { bar.style.width = '0%'; }, 250);
+    }, 240);
+  });
+}
+
 function switchTab(tabName){
+  triggerTabLoader();
   document.querySelectorAll('nav.tabs button').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab === tabName);
   });
@@ -992,13 +1625,16 @@ if(ovSem){
 }
 
 function calculateTotalHours(){
-  let total = 0;
-  data.slots.forEach(s => {
-    const startH = s.startHour !== undefined ? s.startHour : s.hour;
-    const endH = s.endHour !== undefined ? s.endHour : (s.hour + 1);
-    total += Math.max(1, endH - startH);
+  let totalMin = 0;
+  (data.slots || []).forEach(s => {
+    const sMin = getSlotStartMinutes(s);
+    const eMin = getSlotEndMinutes(s);
+    if(eMin > sMin){
+      totalMin += (eMin - sMin);
+    }
   });
-  return total;
+  const hours = totalMin / 60;
+  return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
 }
 
 function getSemesterWeeks(){
@@ -1062,7 +1698,7 @@ function renderWeeksViewer(){
   const cfg = data.config || {};
   if(!cfg.startDate || !cfg.endDate){
     wrap.innerHTML = `
-      <div style="background:var(--surface); border-radius:var(--radius); padding:18px; color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+      <div style="background:var(--glass); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border:1px solid var(--glass-border); border-radius:var(--radius); padding:18px; color:var(--chalk); box-shadow:0 6px 18px rgba(0,0,0,0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
         <div style="display:flex; align-items:center; gap:12px;">
           <span style="font-size:22px;">🗓️</span>
           <div>
@@ -1421,26 +2057,88 @@ function renderCourseProgress(){
 }
 
 function renderSettingsInputs(){
-  const cfg = data.config || { startDate: '2026-08-01', endDate: '2026-12-15' };
+  const cfg = data.config || {};
   const startInput = document.getElementById('cfg-start-date');
   const endInput = document.getElementById('cfg-end-date');
   if(startInput) startInput.value = cfg.startDate || '';
   if(endInput) endInput.value = cfg.endDate || '';
+
+  // Poblar las opciones de hora (0–23) si todavía están vacías
+  const hourSelectIds = [
+    'shift-start-vespertino','shift-end-vespertino',
+    'shift-start-matutino',  'shift-end-matutino',
+    'shift-start-nocturno',  'shift-end-nocturno',
+    'shift-start-completo',  'shift-end-completo'
+  ];
+  hourSelectIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el || el.options.length > 0) return;
+    for(let h = 0; h <= 24; h++){
+      const opt = document.createElement('option');
+      opt.value = h;
+      opt.textContent = formatHour(h);
+      el.appendChild(opt);
+    }
+  });
+
+  // Rellenar inputs de horarios de turnos
+  const sc = cfg.shiftConfig || {};
+  ['vespertino','matutino','nocturno','completo'].forEach(key => {
+    const s = sc[key] || SHIFT_DEFAULTS[key];
+    const startEl = document.getElementById(`shift-start-${key}`);
+    const endEl   = document.getElementById(`shift-end-${key}`);
+    if(startEl) startEl.value = s.start;
+    if(endEl)   endEl.value   = s.end;
+  });
+
+  // Actualizar labels del select de turno
+  const select = document.getElementById('shift-select');
+  if(select){
+    select.querySelectorAll('option').forEach(opt => {
+      opt.textContent = formatShiftLabel(opt.value);
+    });
+  }
 }
 
 function saveSettings(){
   const startDate = document.getElementById('cfg-start-date').value;
-  const endDate = document.getElementById('cfg-end-date').value;
+  const endDate   = document.getElementById('cfg-end-date').value;
 
   if(startDate && endDate && endDate < startDate){
     alert('La fecha de fin debe ser posterior a la fecha de inicio.');
     return;
   }
 
-  data.config = { startDate, endDate };
+  data.config = Object.assign({}, data.config || {}, { startDate, endDate });
   saveData();
   render();
   alert('¡Ajustes guardados correctamente!');
+}
+
+function saveShiftConfig(){
+  if(!data.config) data.config = {};
+  if(!data.config.shiftConfig) data.config.shiftConfig = {};
+
+  let valid = true;
+  ['vespertino','matutino','nocturno','completo'].forEach(key => {
+    const startEl = document.getElementById(`shift-start-${key}`);
+    const endEl   = document.getElementById(`shift-end-${key}`);
+    if(!startEl || !endEl) return;
+    const s = parseInt(startEl.value);
+    const e = parseInt(endEl.value);
+    if(isNaN(s) || isNaN(e) || e <= s){
+      alert(`El horario de ${key} es inválido: la hora de fin debe ser mayor que la de inicio.`);
+      valid = false;
+      return;
+    }
+    if(e - s < 1){ alert(`El turno ${key} debe tener al menos 1 hora.`); valid = false; return; }
+    data.config.shiftConfig[key] = { start: s, end: e };
+  });
+
+  if(!valid) return;
+  saveData();
+  render();
+  alert('¡Horarios de turnos guardados correctamente!');
 }
 
 // ---------- Render ----------
@@ -1452,12 +2150,14 @@ function render(){
   renderCourseProgress();
   renderWeeksViewer();
   renderSettingsInputs();
+  renderThemeSwatches();
+  renderAccentSwatches();
 
   const totalFaltas = (data.faltas || []).length;
   document.getElementById('stat-faltas').textContent = totalFaltas;
 
   const totalHoras = calculateTotalHours();
-  document.getElementById('stat-horas').textContent = `${totalHoras}h`;
+  document.getElementById('stat-horas').textContent = totalHoras;
 }
 
 function renderGrid(){
@@ -1465,9 +2165,13 @@ function renderGrid(){
   const select = document.getElementById('shift-select');
   if(select && select.value !== shiftKey){ select.value = shiftKey; }
 
-  const hours = SHIFTS[shiftKey] || SHIFTS.vespertino;
+  const hours = getShiftHours(shiftKey);
   const grid = document.getElementById('schedule-grid');
   grid.innerHTML = '';
+
+  const shiftStartMin = hours[0] * 60;
+  const shiftEndMin = (hours[hours.length - 1] + 1) * 60;
+  const shiftTotalMin = shiftEndMin - shiftStartMin;
 
   // 1. Day headers (Row 1)
   const emptyHead = el('div','g-head','');
@@ -1482,7 +2186,8 @@ function renderGrid(){
     grid.appendChild(head);
   });
 
-  // 2. Time labels & Background cells (Rows 2..N)
+  // 2. Time labels & Background cells (Rows 2..N+1)
+  const totalRows = hours.length;
   hours.forEach((h, hIdx) => {
     const rIdx = hIdx + 2;
     const timeLabel = el('div','g-time', formatHour(h));
@@ -1499,44 +2204,77 @@ function renderGrid(){
     });
   });
 
-  // 3. Flexible Class Blocks (spanning grid rows)
-  data.slots.forEach(slot => {
-    const mat = data.materias.find(m => m.id === slot.materiaId);
-    if(!mat) return;
+  // 3. Day Column Overlays for precise minute-positioned class blocks
+  DAYS.forEach((d, dIdx) => {
+    const dayCol = document.createElement('div');
+    dayCol.className = 'g-day-col';
+    dayCol.style.gridColumn = (dIdx + 2).toString();
+    dayCol.style.gridRow = `2 / span ${totalRows}`;
+    dayCol.style.position = 'relative';
+    dayCol.style.pointerEvents = 'none';
+    grid.appendChild(dayCol);
 
-    const sHour = slot.startHour !== undefined ? slot.startHour : slot.hour;
-    const eHour = slot.endHour !== undefined ? slot.endHour : (slot.hour + 1);
+    const daySlots = (data.slots || []).filter(s => s.day === dIdx);
 
-    const sRowIdx = hours.indexOf(sHour);
-    if(sRowIdx === -1) return; // Outside current shift view
+    daySlots.forEach(slot => {
+      const mat = data.materias.find(m => m.id === slot.materiaId);
+      if(!mat) return;
 
-    let eRowIdx = hours.indexOf(eHour);
-    if(eRowIdx === -1){
-      eRowIdx = sRowIdx + (eHour - sHour);
-    }
+      const sMin = getSlotStartMinutes(slot);
+      const eMin = getSlotEndMinutes(slot);
 
-    const spanRows = Math.max(1, eRowIdx - sRowIdx);
-    const startRow = sRowIdx + 2;
+      if(eMin <= shiftStartMin || sMin >= shiftEndMin) return; // Fuera del turno activo
 
-    const block = el('div','g-block','');
-    block.style.gridColumn = (slot.day + 2).toString();
-    block.style.gridRow = `${startRow} / span ${spanRows}`;
-    block.style.background = mat.color;
-    block.title = 'Haz clic para editar o eliminar esta clase';
+      const clampedStartMin = Math.max(shiftStartMin, sMin);
+      const clampedEndMin = Math.min(shiftEndMin, eMin);
+      const durMin = Math.max(15, eMin - sMin);
 
-    const descText = slot.aula || mat.descripcion;
+      const topPct = ((clampedStartMin - shiftStartMin) / shiftTotalMin) * 100;
+      const heightPct = ((clampedEndMin - clampedStartMin) / shiftTotalMin) * 100;
 
-    let content = `<b>${escapeHtml(mat.nombre)}</b>`;
-    if(mat.profesor) content += `<div style="font-size:11px;opacity:0.9;">${escapeHtml(mat.profesor)}</div>`;
-    if(descText) content += `<div class="g-aula">📍 ${escapeHtml(descText)}</div>`;
-    content += `<div class="g-time-badge">🕒 ${formatHour(sHour)} - ${formatHour(eHour)}</div>`;
+      const isShort = durMin <= 35 || heightPct < 9;
 
-    block.innerHTML = content;
-    block.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openSlotModal(slot.day, sHour, slot.materiaId, slot);
+      const block = document.createElement('div');
+      block.className = 'g-block' + (isShort ? ' compact' : '');
+      block.style.position = 'absolute';
+      block.style.top = `${topPct}%`;
+      block.style.height = `max(${heightPct}%, 30px)`;
+      block.style.left = '2px';
+      block.style.right = '2px';
+      block.style.width = 'calc(100% - 4px)';
+      block.style.background = mat.color;
+      block.style.pointerEvents = 'auto';
+
+      const descText = slot.aula || mat.descripcion;
+      const startStr = formatTime(sMin);
+      const endStr = formatTime(eMin);
+
+      block.title = `${mat.nombre}${mat.profesor ? '\n' + mat.profesor : ''}${descText ? '\n📍 ' + descText : ''}\n🕒 ${startStr} - ${endStr}\n(Haz clic para editar)`;
+
+      let content = '';
+      if(isShort){
+        content = `
+          <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px; overflow:hidden;">
+            <b style="font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:0;">${escapeHtml(mat.nombre)}</b>
+            <span class="g-time-badge" style="margin:0; flex-shrink:0;">🕒 ${startStr}-${endStr}</span>
+          </div>
+          ${descText ? `<div class="g-aula" style="margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📍 ${escapeHtml(descText)}</div>` : ''}
+        `;
+      } else {
+        content = `<b>${escapeHtml(mat.nombre)}</b>`;
+        if(mat.profesor) content += `<div style="font-size:11px;opacity:0.9;">${escapeHtml(mat.profesor)}</div>`;
+        if(descText) content += `<div class="g-aula">📍 ${escapeHtml(descText)}</div>`;
+        content += `<div class="g-time-badge">🕒 ${startStr} - ${endStr}</div>`;
+      }
+
+      block.innerHTML = content;
+      block.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSlotModal(slot.day, Math.floor(sMin / 60), slot.materiaId, slot);
+      });
+
+      dayCol.appendChild(block);
     });
-    grid.appendChild(block);
   });
 }
 
@@ -1741,40 +2479,16 @@ function openSlotModal(day, hour, materiaIdDefault, slotToEdit){
     daysWrap.appendChild(label);
   });
 
-  const startSelect = document.getElementById('slot-start-hour');
-  const endSelect = document.getElementById('slot-end-hour');
-  startSelect.innerHTML = '';
-  endSelect.innerHTML = '';
-
-  const allHours = [];
-  for(let h = 6; h <= 22; h++) allHours.push(h);
-
-  let startH = hour !== undefined ? hour : 14;
-  let endH = startH + 1;
+  let startMin = (hour !== undefined ? hour : 14) * 60;
+  let endMin = startMin + 60;
 
   if(slotToEdit){
-    startH = slotToEdit.startHour !== undefined ? slotToEdit.startHour : slotToEdit.hour;
-    endH = slotToEdit.endHour !== undefined ? slotToEdit.endHour : (slotToEdit.hour + 1);
+    startMin = getSlotStartMinutes(slotToEdit);
+    endMin = getSlotEndMinutes(slotToEdit);
   }
 
-  allHours.forEach(h => {
-    const optS = document.createElement('option');
-    optS.value = h; optS.textContent = formatHour(h);
-    if(h === startH) optS.selected = true;
-    startSelect.appendChild(optS);
-
-    const optE = document.createElement('option');
-    optE.value = h; optE.textContent = formatHour(h);
-    if(h === endH) optE.selected = true;
-    endSelect.appendChild(optE);
-  });
-
-  startSelect.onchange = () => {
-    const sh = parseInt(startSelect.value);
-    if(parseInt(endSelect.value) <= sh){
-      endSelect.value = Math.min(22, sh + 1);
-    }
-  };
+  document.getElementById('slot-start-time').value = minutesToTimeStr(startMin);
+  document.getElementById('slot-end-time').value = minutesToTimeStr(endMin);
 
   updateSlotDescFromMateria();
   document.getElementById('overlay-slot').classList.add('active');
@@ -1807,31 +2521,56 @@ function saveSlot(){
     return;
   }
 
-  const startHour = parseInt(document.getElementById('slot-start-hour').value);
-  let endHour = parseInt(document.getElementById('slot-end-hour').value);
-  if(endHour <= startHour){
-    endHour = startHour + 1;
+  const startVal = document.getElementById('slot-start-time').value;
+  const endVal = document.getElementById('slot-end-time').value;
+
+  if(!startVal || !endVal){
+    alert('Por favor ingresa una hora de inicio y una hora de fin válidas.');
+    return;
+  }
+
+  const startMin = parseToMinutes(startVal);
+  const endMin = parseToMinutes(endVal);
+
+  if(endMin <= startMin){
+    alert('La hora de fin debe ser posterior a la hora de inicio.');
+    return;
+  }
+
+  const durationMin = endMin - startMin;
+  if(durationMin < 15){
+    alert('La duración mínima de una clase debe ser de 15 minutos.');
+    return;
   }
 
   const activeMat = data.materias.find(m => m.id === materiaId);
   const aula = activeMat ? (activeMat.descripcion || '') : '';
+
+  const startHFloat = startMin / 60;
+  const endHFloat = endMin / 60;
 
   if(editingSlotId){
     const existing = data.slots.find(s => s.id === editingSlotId);
     if(existing){
       existing.materiaId = materiaId;
       existing.day = checkedDays[0];
-      existing.startHour = startHour;
-      existing.endHour = endHour;
+      existing.startTime = startVal;
+      existing.endTime = endVal;
+      existing.startHour = startHFloat;
+      existing.endHour = endHFloat;
+      existing.hour = Math.floor(startHFloat);
       existing.aula = aula;
     }
     for(let i = 1; i < checkedDays.length; i++){
       data.slots.push({
         id: uid(),
-        day: checkedDays[i],
-        startHour,
-        endHour,
         materiaId,
+        day: checkedDays[i],
+        startTime: startVal,
+        endTime: endVal,
+        startHour: startHFloat,
+        endHour: endHFloat,
+        hour: Math.floor(startHFloat),
         aula
       });
     }
@@ -1839,17 +2578,20 @@ function saveSlot(){
     checkedDays.forEach(day => {
       data.slots.push({
         id: uid(),
-        day,
-        startHour,
-        endHour,
         materiaId,
+        day,
+        startTime: startVal,
+        endTime: endVal,
+        startHour: startHFloat,
+        endHour: endHFloat,
+        hour: Math.floor(startHFloat),
         aula
       });
     });
   }
 
-  closeSlotModal();
   saveData();
+  closeSlotModal();
   render();
 }
 
@@ -1888,6 +2630,47 @@ function fmtDate(iso){
 }
 
 setDateLabel();
+// ---------- Registro PWA Service Worker & Eventos de Instalación ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('[PWA] Service Worker registrado con éxito:', reg.scope);
+    }).catch((err) => {
+      console.warn('[PWA] Error al registrar Service Worker:', err);
+    });
+  });
+}
+
+let deferredPwaPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  const btn = document.getElementById('btn-pwa-install');
+  if (btn) {
+    btn.style.display = 'inline-flex';
+  }
+});
+
+async function installPWA() {
+  if (!deferredPwaPrompt) return;
+  deferredPwaPrompt.prompt();
+  const choiceResult = await deferredPwaPrompt.userChoice;
+  if (choiceResult.outcome === 'accepted') {
+    console.log('[PWA] El usuario aceptó la instalación');
+    const btn = document.getElementById('btn-pwa-install');
+    if (btn) btn.style.display = 'none';
+  }
+  deferredPwaPrompt = null;
+}
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] Aplicación instalada exitosamente');
+  const badge = document.getElementById('pwa-status-badge');
+  if (badge) badge.textContent = '✓ Aplicación Instalada';
+  const btn = document.getElementById('btn-pwa-install');
+  if (btn) btn.style.display = 'none';
+});
+
 loadData();
 </script>
 </body>
