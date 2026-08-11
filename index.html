@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Semestre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1F3A2E;
+    --bg-deep: #152820;
+    --surface: #FBF8F0;
+    --surface-dim: #F0EBDC;
+    --chalk: #F4F1E6;
+    --chalk-dim: rgba(244,241,230,0.55);
+    --rule: rgba(244,241,230,0.16);
+    --ink: #26251F;
+    --ink-dim: #6b6a5f;
+    --amber: #E8A33D;
+    --coral: #D6603C;
+    --sage: #7FA687;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(244,241,230,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+    color: var(--chalk);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+  }
+  .wrap{ max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+  }
+  .brand h1{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 28px;
+    margin:0 0 4px; letter-spacing: -0.01em;
+  }
+  .brand .sub{ color: var(--chalk-dim); font-size: 13px; font-family:'IBM Plex Mono', monospace; }
+  .stat{
+    text-align:right; font-family:'IBM Plex Mono', monospace;
+  }
+  .stat .num{ font-size: 22px; color: var(--amber); font-weight:600; }
+  .stat .lbl{ font-size: 11px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .06em; }
+
+  nav.tabs{ display:flex; gap: 6px; margin-bottom: 22px; }
+  nav.tabs button{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size: 14px;
+    background: transparent; border: 1px solid var(--rule); color: var(--chalk-dim);
+    padding: 9px 16px; border-radius: 999px; cursor:pointer; transition: all .15s ease;
+  }
+  nav.tabs button:hover{ color: var(--chalk); border-color: var(--chalk-dim); }
+  nav.tabs button.active{ background: var(--amber); color: #241705; border-color: var(--amber); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: fade .2s ease; }
+  @keyframes fade{ from{opacity:0; transform: translateY(3px);} to{opacity:1; transform:none;} }
+
+  /* ---- Horario grid ---- */
+  .grid-card{
+    background: var(--surface); border-radius: var(--radius); padding: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .schedule-grid{
+    display:grid;
+    grid-template-columns: 68px repeat(5, 1fr);
+    grid-auto-rows: minmax(48px, auto);
+    position: relative;
+    border-top: 1px solid var(--surface-dim); border-left: 1px solid var(--surface-dim);
+  }
+  .g-head, .g-time, .g-cell{
+    border-right: 1px solid var(--surface-dim); border-bottom: 1px solid var(--surface-dim);
+  }
+  .g-head{
+    font-family:'IBM Plex Mono', monospace; font-size: 11px; letter-spacing:.06em;
+    text-transform: uppercase; color: var(--ink-dim); text-align:center; padding: 8px 4px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .g-time{
+    font-family:'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-dim);
+    display:flex; align-items:flex-start; justify-content:flex-end; padding: 6px 6px 0 0;
+  }
+  .g-cell{ position:relative; min-height: 48px; cursor:pointer; }
+  .g-cell:hover{ background: rgba(232,163,61,0.12); }
+  
+  .g-block{
+    margin: 2px; border-radius: 6px; padding: 6px 8px;
+    font-size: 11.5px; line-height:1.25; color:#fff; cursor:pointer; overflow:hidden;
+    font-family:'IBM Plex Sans', sans-serif; font-weight:500; z-index: 2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.1s ease, box-shadow 0.1s ease;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .g-block:hover{ transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.28); z-index: 4; }
+  .g-block b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:12.5px; margin-bottom: 1px; }
+  .g-block .g-time-badge{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; opacity:0.9; margin-top:3px; }
+  .g-block .g-aula{ font-size:10px; font-weight:600; opacity:0.95; margin-top:2px; }
+
+  .hint{ color: var(--ink-dim); font-size: 12.5px; margin-top: 12px; font-family:'IBM Plex Mono', monospace; }
+
+  /* ---- Materias ---- */
+  .cards{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 14px; }
+  .mcard{
+    background: var(--surface); border-radius: var(--radius); padding: 16px;
+    color: var(--ink); position:relative; border-left: 6px solid var(--amber);
+  }
+  .mcard h3{ font-family:'Space Grotesk', sans-serif; margin: 0 0 2px; font-size: 16px; }
+  .mcard .prof{ font-size: 12.5px; color: var(--ink-dim); margin-bottom: 10px; }
+  .mcard .faltas-line{ font-family:'IBM Plex Mono', monospace; font-size: 12px; display:flex; justify-content:space-between; margin-bottom:6px; }
+  .bar{ height:6px; border-radius:99px; background: var(--surface-dim); overflow:hidden; margin-bottom: 10px; }
+  .bar > div{ height:100%; background: var(--sage); transition: width 0.3s ease, background 0.3s ease; }
+  .mcard .actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .mcard .actions button{ font-size:11.5px; }
+
+  .addcard{
+    background: transparent; border: 1.5px dashed var(--rule); border-radius: var(--radius);
+    color: var(--chalk-dim); display:flex; align-items:center; justify-content:center;
+    min-height: 120px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:600;
+    transition: all 0.2s ease;
+  }
+  .addcard:hover{ border-color: var(--amber); color: var(--amber); background: rgba(232,163,61,0.05); }
+
+  /* ---- Inasistencias & Visor de Semanas ---- */
+  .flist{ display:flex; flex-direction:column; gap: 10px; }
+  .frow{
+    background: var(--surface); border-radius: var(--radius); padding: 14px 16px;
+    color: var(--ink); display:flex; align-items:center; gap: 14px; flex-wrap:wrap;
+  }
+  .frow .dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .frow .name{ font-family:'Space Grotesk',sans-serif; font-weight:600; flex: 1 1 140px; }
+  .frow .count{ font-family:'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-dim); }
+  .history{ font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-dim); flex-basis:100%; }
+  .history span{ display:inline-flex; align-items:center; gap:4px; background: var(--surface-dim); border-radius:6px; padding: 2px 7px; margin: 3px 4px 0 0; }
+  .history button{ background:none; border:none; color: var(--coral); cursor:pointer; font-size:12px; padding:0; }
+
+  .week-cards-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;
+    max-height: 520px; overflow-y: auto; padding-right: 4px; margin-bottom: 24px;
+  }
+  .week-card{
+    background: var(--surface); border-radius: var(--radius); padding: 14px 16px;
+    color: var(--ink); position: relative; border: 1.5px solid var(--surface-dim);
+    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .week-card:hover{ transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
+  .week-card.current{
+    border-color: var(--amber); box-shadow: 0 0 14px rgba(232,163,61,0.35);
+  }
+  .week-card-header{ display: flex; justify-content: space-between; align-items: flex-start; }
+  .week-card-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
+  .week-card-dates{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
+  .week-card-badge{
+    font-size: 10px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 7px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .week-card-badge.current{ background: var(--amber); color: #241705; }
+  .week-card-badge.past{ background: var(--surface-dim); color: var(--ink-dim); }
+  .week-card-badge.future{ background: rgba(127,166,135,0.2); color: #2c5435; }
+
+  .week-note-item{
+    background: #fff; border-radius: 8px; padding: 10px 12px; font-size: 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    border-left: 4px solid var(--amber); box-shadow: 0 1.5px 4px rgba(0,0,0,0.06);
+    transition: transform 0.1s ease;
+  }
+  .week-note-item:hover{ transform: translateY(-1px); }
+  .week-note-title-row{ display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .week-note-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); line-height: 1.35; word-break: break-word; }
+  .week-note-actions{ display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+  .week-note-actions button{ background: none; border: none; cursor: pointer; font-size: 12px; padding: 1px 3px; opacity: 0.7; transition: opacity 0.15s ease; }
+  .week-note-actions button:hover{ opacity: 1; }
+
+  .week-note-meta-row{ display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+  .week-note-date{ font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-dim); opacity: 0.8; margin-left: auto; white-space: nowrap; }
+
+  /* ---- buttons ---- */
+  button.primary{
+    background: var(--amber); color:#241705; border:none; border-radius: 999px;
+    padding: 8px 16px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; cursor:pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+  button.primary:hover{ opacity: 0.95; }
+  button.primary:active{ transform: scale(0.98); }
+
+  button.ghost{
+    background: transparent; border: 1px solid rgba(38,37,31,0.25); color: var(--ink);
+    border-radius: 999px; padding: 6px 12px; font-size: 12.5px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+    transition: all 0.15s ease;
+  }
+  button.ghost.danger{ color: var(--coral); border-color: rgba(214,96,60,0.4); }
+  button.ghost:hover{ background: rgba(38,37,31,0.06); }
+
+  /* ---- modal ---- */
+  .overlay{
+    position:fixed; inset:0; background: rgba(21,40,32,0.75); display:none;
+    align-items:center; justify-content:center; padding: 20px; z-index: 50;
+    backdrop-filter: blur(4px);
+  }
+  .overlay.active{ display:flex; }
+  .modal{
+    background: var(--surface); color: var(--ink); border-radius: 14px; padding: 22px;
+    width: 100%; max-width: 420px; max-height: 88vh; overflow-y:auto;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+  }
+  .modal h2{ font-family:'Space Grotesk',sans-serif; margin: 0 0 16px; font-size:18px; }
+  .field{ margin-bottom: 14px; }
+  .field label{ display:block; font-size: 12px; font-weight:600; margin-bottom:5px; color: var(--ink-dim); text-transform:uppercase; letter-spacing:.04em; }
+  .field input, .field select{
+    width:100%; padding: 9px 10px; border-radius:7px; border: 1px solid var(--surface-dim);
+    background: #fff; font-family:'IBM Plex Sans',sans-serif; font-size: 14px; color: var(--ink);
+  }
+  .day-chip{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding: 7px 12px; border-radius: 6px; border: 1px solid var(--surface-dim);
+    background: #fff; cursor: pointer; font-size: 13px; font-family:'Space Grotesk', sans-serif;
+    font-weight: 600; color: var(--ink); user-select: none; transition: all 0.15s ease;
+  }
+  .day-chip input{ display:none; }
+  .day-chip.sel{ background: var(--amber); color: #241705; border-color: var(--amber); }
+
+  .colorrow{ display:flex; gap:8px; flex-wrap:wrap; }
+  .swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; border: 2px solid transparent; transition: transform 0.15s ease; }
+  .swatch:hover{ transform: scale(1.1); }
+  .swatch.sel{ border-color: var(--ink); transform: scale(1.15); }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top: 18px; }
+  .empty{ color: var(--chalk-dim); font-family:'IBM Plex Mono', monospace; font-size: 13px; padding: 30px 4px; text-align:center; }
+  @media (max-width: 640px){
+    .schedule-grid{ grid-template-columns: 48px repeat(5, 1fr); }
+    .g-head{ font-size: 9.5px; }
+    .g-block{ font-size:10px; padding: 4px; }
+    .g-block b{ font-size:10.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h1 style="margin:0;">Mi Semestre</h1>
+        <span id="active-semester-badge" style="font-family:'Space Grotesk',sans-serif; font-size:11.5px; font-weight:700; background:rgba(232,163,61,0.18); color:var(--amber); padding:3px 10px; border-radius:99px;">—</span>
+      </div>
+      <div class="sub" id="today-label">—</div>
+    </div>
+    <div style="display:flex; gap:20px; align-items:center;">
+      <div class="stat">
+        <div class="num" id="stat-horas">0h</div>
+        <div class="lbl">Horas / semana</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="stat-faltas">0</div>
+        <div class="lbl">Inasistencias totales</div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="horario" class="active">Horario</button>
+    <button data-tab="materias">Materias</button>
+    <button data-tab="inasistencias">Historial y Semanas</button>
+    <button data-tab="ajustes">Ajustes</button>
+  </nav>
+
+  <section class="panel active" id="panel-horario">
+    <!-- Barra de progreso del curso / semestre -->
+    <div class="progress-card" style="background:var(--surface); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px; color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,0.2);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+        <div>
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--ink);">Progreso del Semestre</span>
+          <span id="course-dates-label" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim); margin-left:8px;">—</span>
+        </div>
+        <span id="course-pct-label" style="font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--amber);">0%</span>
+      </div>
+      <div class="bar" style="height:8px; margin-bottom:8px;">
+        <div id="course-progress-bar" style="width:0%; background:linear-gradient(90deg, var(--sage), var(--amber)); transition:width 0.4s ease;"></div>
+      </div>
+      <div id="course-info-sub" style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-dim); display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+        <span id="course-weeks-sub">—</span>
+        <span id="course-days-sub">—</span>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+      <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:var(--chalk-dim);">Configuración de Horario</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label for="shift-select" style="font-size:12px; font-weight:600; color:var(--chalk-dim); text-transform:uppercase; letter-spacing:.04em;">Turno:</label>
+        <select id="shift-select" onchange="updateShift(this.value)" style="padding:6px 12px; border-radius:8px; border:1px solid var(--rule); font-family:'IBM Plex Sans',sans-serif; font-size:13px; background:var(--surface); color:var(--ink); font-weight:600; cursor:pointer;">
+          <option value="vespertino" selected>Vespertino (2:00 PM - 8:00 PM)</option>
+          <option value="matutino">Matutino (7:00 AM - 3:00 PM)</option>
+          <option value="nocturno">Nocturno (4:00 PM - 10:00 PM)</option>
+          <option value="completo">Jornada Completa (7:00 AM - 9:00 PM)</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-card">
+      <div id="schedule-grid" class="schedule-grid"></div>
+      <div class="hint">Toca una celda o materia para gestionar · Permite clases con duración flexible</div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-materias">
+    <div class="cards" id="materias-cards"></div>
+  </section>
+
+  <section class="panel" id="panel-inasistencias">
+    <!-- Visor de semanas del curso -->
+    <div id="weeks-viewer-wrap"></div>
+
+    <div style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0; color:var(--chalk);">Registro de Inasistencias</h2>
+    </div>
+    <div class="flist" id="faltas-list"></div>
+  </section>
+
+  <section class="panel" id="panel-ajustes">
+    <!-- Card 1: Gestión de Semestres (Espacios de Trabajo) -->
+    <div class="grid-card" style="max-width:540px; margin:0 auto 20px; padding:24px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:20px; color:var(--ink);">Gestión de Semestres</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 20px;">Crea espacios de trabajo independientes desde cero para cada periodo escolar o alterna fácilmente entre semestres creados.</p>
+      
+      <div class="field">
+        <label>Semestre Activo</label>
+        <select id="cfg-semester-select" onchange="switchSemester(this.value)"></select>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;">
+        <button class="primary" type="button" onclick="openSemesterModal(false)" style="font-size:12.5px;">+ Nuevo Semestre</button>
+        <button class="ghost" type="button" onclick="openSemesterModal(true)" style="font-size:12.5px;">✏️ Renombrar</button>
+        <button class="ghost danger" type="button" onclick="deleteCurrentSemester()" style="font-size:12.5px;">🗑️ Eliminar</button>
+      </div>
+    </div>
+
+    <!-- Card 2: Fechas del Semestre Activo -->
+    <div class="grid-card" style="max-width:540px; margin:0 auto; padding:24px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 8px; font-size:20px; color:var(--ink);">Fechas del Semestre Activo</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 20px;">Define las fechas oficiales de inicio y término para calcular el avance semanal del semestre en tu horario.</p>
+      
+      <div class="field">
+        <label>Fecha de inicio del curso</label>
+        <input type="date" id="cfg-start-date">
+      </div>
+      <div class="field">
+        <label>Fecha de fin del curso</label>
+        <input type="date" id="cfg-end-date">
+      </div>
+      <div class="modal-actions" style="margin-top:22px;">
+        <button class="primary" onclick="saveSettings()">Guardar Configuración</button>
+      </div>
+    </div>
+
+    <!-- Card 3: Backup en la Nube y Copia Local -->
+    <div class="grid-card" style="max-width:540px; margin:20px auto 0; padding:24px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 4px; font-size:20px; color:var(--ink);">☁️ Backup en la Nube</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin:0 0 18px;">Guarda o restaura todos tus semestres en un repositorio privado de GitHub. La contraseña protege el acceso al servidor.</p>
+
+      <div class="field">
+        <label>Contraseña de Backup</label>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="password" id="cloud-password" placeholder="••••••••" autocomplete="current-password" style="flex:1;">
+          <button type="button" onclick="toggleCloudPasswordVisibility()" id="btn-toggle-pwd" title="Mostrar / ocultar contraseña" style="background:none; border:1px solid var(--surface-dim); border-radius:7px; padding:8px 10px; cursor:pointer; font-size:14px; flex-shrink:0;">👁</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+        <button class="primary" type="button" onclick="pushToCloud()" id="btn-cloud-push" style="font-size:12.5px;">☁️ Subir a la Nube</button>
+        <button class="ghost" type="button" onclick="pullFromCloud()" id="btn-cloud-pull" style="font-size:12.5px;">⬇️ Restaurar desde la Nube</button>
+      </div>
+
+      <div id="cloud-status" style="display:none; margin-top:14px; padding:10px 14px; border-radius:8px; font-size:12.5px; font-family:'IBM Plex Mono',monospace; line-height:1.5;"></div>
+
+      <hr style="border:none; border-top:1px solid var(--surface-dim); margin:20px 0 16px;">
+      <p style="font-size:12px; color:var(--ink-dim); margin:0 0 10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;">Backup Local (sin contraseña)</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost" type="button" onclick="exportBackupJson()" style="font-size:12px;">📥 Exportar .json</button>
+        <button class="ghost" type="button" onclick="triggerImportJson()" style="font-size:12px;">📤 Importar .json</button>
+        <input type="file" id="json-import-file" accept=".json" style="display:none;" onchange="handleImportJson(this)">
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Modal: nuevo/editar semestre -->
+<div class="overlay" id="overlay-semester">
+  <div class="modal">
+    <h2 id="semester-modal-title">Nuevo Semestre</h2>
+    <div class="field">
+      <label>Nombre del Semestre / Espacio de Trabajo</label>
+      <input type="text" id="sem-name" placeholder="Ej. Semestre 2026-B / Verano 2027">
+    </div>
+    <div class="hint" style="margin-top:-6px; margin-bottom:16px; font-size:11.5px; color:var(--ink-dim);">
+      💡 Al crear un nuevo semestre, se iniciará con materias y horario totalmente limpios e independientes.
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" type="button" onclick="closeSemesterModal()">Cancelar</button>
+      <button class="primary" type="button" onclick="saveSemesterFromModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- Modal: nueva/editar materia -->
+<div class="overlay" id="overlay-materia">
+  <div class="modal">
+    <h2 id="materia-modal-title">Nueva materia</h2>
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" id="m-nombre" placeholder="Cálculo diferencial">
+    </div>
+    <div class="field">
+      <label>Profesor</label>
+      <input type="text" id="m-profesor" placeholder="Ing. Ramírez">
+    </div>
+    <div class="field">
+      <label>Descripción / Salón</label>
+      <input type="text" id="m-descripcion" placeholder="Ej. Edificio B - Salón 201 / Grupo A">
+    </div>
+    <div class="field">
+      <label>Límite de faltas</label>
+      <input type="number" id="m-limite" value="5" min="1">
+    </div>
+    <div class="field">
+      <label>Color</label>
+      <div class="colorrow" id="m-colors"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeMateriaModal()">Cancelar</button>
+      <button class="primary" onclick="saveMateria()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: asignar/editar celda de horario con duración flexible -->
+<div class="overlay" id="overlay-slot">
+  <div class="modal">
+    <h2 id="slot-modal-title">Asignar horario de clase</h2>
+    <div class="field">
+      <label>Materia</label>
+      <select id="slot-materia"></select>
+    </div>
+    <div class="field">
+      <label>Día(s) de clase</label>
+      <div id="slot-days-checkboxes" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div class="field">
+        <label>Hora de inicio</label>
+        <select id="slot-start-hour"></select>
+      </div>
+      <div class="field">
+        <label>Hora de fin</label>
+        <select id="slot-end-hour"></select>
+      </div>
+    </div>
+    <div class="field">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+        <label style="margin:0;">Descripción / Salón</label>
+        <span id="slot-desc-badge" style="display:none; font-size:11px; color:#D6603C; background:rgba(214,96,60,0.12); padding:2px 8px; border-radius:99px; font-weight:600; font-family:'IBM Plex Mono',monospace;">⚠️ Sin descripción guardada</span>
+      </div>
+      <input type="text" id="slot-aula" readonly style="background:var(--surface-dim); cursor:not-allowed; opacity:0.9;" placeholder="Sin descripción asignada en la pestaña Materias">
+      <div id="slot-desc-hint" style="display:none; font-size:11.5px; color:var(--ink-dim); margin-top:4px; font-family:'IBM Plex Mono',monospace;">
+        💡 Puedes agregar o cambiar la descripción editando la materia desde la pestaña <b>Materias</b>.
+      </div>
+    </div>
+    <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="ghost danger" id="btn-delete-slot" type="button" style="display:none;" onclick="deleteCurrentSlot()">Eliminar clase</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="ghost" type="button" onclick="closeSlotModal()">Cancelar</button>
+        <button class="primary" type="button" onclick="saveSlot()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: nueva/editar nota por semana -->
+<div class="overlay" id="overlay-week-note">
+  <div class="modal">
+    <h2 id="week-note-modal-title">Nota de semana</h2>
+    <div class="field">
+      <label>Semana del curso</label>
+      <select id="wn-week-select"></select>
+    </div>
+    <div class="field">
+      <label>Nota / Recordatorio</label>
+      <input type="text" id="wn-text" placeholder="Ej. Entregar proyecto final / Examen parcial">
+    </div>
+    <div class="field">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+        <label style="margin:0;">Materia(s) vinculada(s)</label>
+        <span id="wn-color-hint" style="font-size:11px; color:var(--amber); font-weight:600; font-family:'IBM Plex Mono',monospace;"></span>
+      </div>
+      <div id="wn-materias-checkboxes" style="display:flex; gap:6px; flex-wrap:wrap; max-height:130px; overflow-y:auto; padding:4px 0;"></div>
+    </div>
+    <div class="field">
+      <label>Color de Etiqueta</label>
+      <div class="colorrow" id="wn-colors"></div>
+    </div>
+    <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="ghost danger" id="btn-delete-week-note" type="button" style="display:none;" onclick="deleteCurrentWeekNote()">Eliminar nota</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="ghost" type="button" onclick="closeWeekNoteModal()">Cancelar</button>
+        <button class="primary" type="button" onclick="saveWeekNote()">Guardar Nota</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PALETTE = ['#E8A33D','#D6603C','#7FA687','#5B8CBF','#B37FBF','#C2A34D','#4F9D8F','#C46B8A'];
+const DAYS = ['Lun','Mar','Mié','Jue','Vie'];
+const SHIFTS = {
+  vespertino: [14, 15, 16, 17, 18, 19], // 2:00 PM - 8:00 PM (14:00 a 20:00)
+  matutino: [7, 8, 9, 10, 11, 12, 13, 14], // 7:00 AM - 3:00 PM
+  nocturno: [16, 17, 18, 19, 20, 21], // 4:00 PM - 10:00 PM
+  completo: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] // 7:00 AM - 9:00 PM
+};
+
+let rootData = {
+  activeSemesterId: 'sem-default',
+  semestres: [
+    {
+      id: 'sem-default',
+      name: 'Semestre 1',
+      data: createEmptySemesterData()
+    }
+  ]
+};
+
+let data = rootData.semestres[0].data;
+let editingMateriaId = null;
+let editingSlotId = null;
+let editingWeekNoteId = null;
+let isEditingSemesterName = false;
+
+function createEmptySemesterData(){
+  return {
+    materias: [],
+    slots: [],
+    faltas: [],
+    weekNotes: [],
+    shift: 'vespertino',
+    config: { startDate: '', endDate: '' }
+  };
+}
+
+function getActiveSemester(){
+  if(!rootData.semestres || !Array.isArray(rootData.semestres) || rootData.semestres.length === 0){
+    rootData.semestres = [{ id: 'sem-default', name: 'Semestre 1', data: createEmptySemesterData() }];
+    rootData.activeSemesterId = 'sem-default';
+  }
+  let active = rootData.semestres.find(s => s.id === rootData.activeSemesterId);
+  if(!active){
+    active = rootData.semestres[0];
+    rootData.activeSemesterId = active.id;
+  }
+  return active;
+}
+
+function updateActiveDataReference(){
+  const active = getActiveSemester();
+  if(!active.data) active.data = createEmptySemesterData();
+  data = active.data;
+
+  const badge = document.getElementById('active-semester-badge');
+  if(badge) badge.textContent = active.name || 'Semestre';
+
+  const select = document.getElementById('cfg-semester-select');
+  if(select){
+    select.innerHTML = '';
+    rootData.semestres.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      if(s.id === rootData.activeSemesterId) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+}
+
+function formatHour(h){
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h12}:00 ${ampm}`;
+}
+
+async function loadData(){
+  try{
+    let raw = null;
+    if(window.storage && typeof window.storage.get === 'function'){
+      const res = await window.storage.get('escuela-data');
+      if(res && res.value) raw = res.value;
+    }
+    if(!raw){
+      raw = localStorage.getItem('escuela-data');
+    }
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.semestres && Array.isArray(parsed.semestres)){
+        rootData = parsed;
+      } else if(parsed){
+        rootData = {
+          activeSemesterId: 'sem-default',
+          semestres: [
+            {
+              id: 'sem-default',
+              name: 'Semestre 1',
+              data: Object.assign(createEmptySemesterData(), parsed)
+            }
+          ]
+        };
+      }
+    }
+  }catch(e){
+    console.warn('Cargando almacenamiento por defecto:', e);
+  }
+  updateActiveDataReference();
+  render();
+}
+
+async function saveData(){
+  try{
+    const active = getActiveSemester();
+    active.data = data;
+    const json = JSON.stringify(rootData);
+    if(window.storage && typeof window.storage.set === 'function'){
+      await window.storage.set('escuela-data', json);
+    }
+    localStorage.setItem('escuela-data', json);
+  }catch(e){
+    console.error('No se pudo guardar:', e);
+  }
+}
+
+function switchSemester(semId){
+  if(semId === rootData.activeSemesterId) return;
+  rootData.activeSemesterId = semId;
+  updateActiveDataReference();
+  saveData();
+  render();
+}
+
+function openSemesterModal(isEdit){
+  isEditingSemesterName = isEdit;
+  const modalTitle = document.getElementById('semester-modal-title');
+  const input = document.getElementById('sem-name');
+
+  if(isEdit){
+    const active = getActiveSemester();
+    modalTitle.textContent = 'Renombrar Semestre';
+    input.value = active.name;
+  } else {
+    modalTitle.textContent = 'Nuevo Semestre';
+    input.value = `Semestre ${rootData.semestres.length + 1}`;
+  }
+
+  document.getElementById('overlay-semester').classList.add('active');
+  setTimeout(() => input.select(), 50);
+}
+
+function closeSemesterModal(){
+  document.getElementById('overlay-semester').classList.remove('active');
+}
+
+function saveSemesterFromModal(){
+  const nameInput = document.getElementById('sem-name').value.trim();
+  if(!nameInput){
+    alert('Por favor ingresa un nombre para el semestre.');
+    return;
+  }
+
+  if(isEditingSemesterName){
+    const active = getActiveSemester();
+    active.name = nameInput;
+  } else {
+    const newSem = {
+      id: uid(),
+      name: nameInput,
+      data: createEmptySemesterData()
+    };
+    rootData.semestres.push(newSem);
+    rootData.activeSemesterId = newSem.id;
+  }
+
+  closeSemesterModal();
+  updateActiveDataReference();
+  saveData();
+  render();
+}
+
+function deleteCurrentSemester(){
+  if(rootData.semestres.length <= 1){
+    alert('No puedes eliminar el único semestre activo. Siempre debe existir al menos un semestre.');
+    return;
+  }
+
+  const active = getActiveSemester();
+  if(!confirm(`¿Estás seguro de eliminar "${active.name}" y todos sus datos de materias, horario y faltas? Esta acción no se puede deshacer.`)) return;
+
+  rootData.semestres = rootData.semestres.filter(s => s.id !== active.id);
+  rootData.activeSemesterId = rootData.semestres[0].id;
+
+  updateActiveDataReference();
+  saveData();
+  render();
+}
+
+// ---------- Copia de Seguridad (Exportar / Importar) ----------
+function exportBackupJson(){
+  try{
+    const jsonStr = JSON.stringify(rootData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const d = new Date();
+    const dateStr = d.toISOString().split('T')[0];
+    const fileName = `mi-semestre-backup-${dateStr}.json`;
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Error al exportar la copia de seguridad: ' + e.message);
+  }
+}
+
+function triggerImportJson(){
+  const fileInput = document.getElementById('json-import-file');
+  if(fileInput){
+    fileInput.value = '';
+    fileInput.click();
+  }
+}
+
+function handleImportJson(inputEl){
+  const file = inputEl.files && inputEl.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      
+      const isRootFormat = parsed && typeof parsed === 'object' && Array.isArray(parsed.semestres) && parsed.semestres.length > 0;
+      const isLegacyFormat = parsed && typeof parsed === 'object' && Array.isArray(parsed.materias) && Array.isArray(parsed.slots);
+
+      if(!isRootFormat && !isLegacyFormat){
+        alert('⚠️ El archivo seleccionado no es compatible con la aplicación "Mi Semestre". Por favor selecciona un archivo JSON exportado previamente desde esta plataforma.');
+        return;
+      }
+
+      if(!confirm('¿Deseas restaurar esta copia de seguridad? Se reemplazarán tus semestres y datos actuales por la información contenida en el archivo.')){
+        return;
+      }
+
+      if(isRootFormat){
+        rootData = parsed;
+      } else if(isLegacyFormat){
+        rootData = {
+          activeSemesterId: 'sem-imported',
+          semestres: [
+            {
+              id: 'sem-imported',
+              name: 'Semestre Importado',
+              data: Object.assign(createEmptySemesterData(), parsed)
+            }
+          ]
+        };
+      }
+
+      updateActiveDataReference();
+      saveData();
+      render();
+      alert('🎉 ¡Los datos del semestre se han importado y restaurado con éxito!');
+    } catch(err){
+      alert('Error al leer el archivo. Asegúrate de seleccionar un archivo JSON válido exportado desde esta misma plataforma.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ---------- Backup en la Nube (GitHub via Vercel Functions) ----------
+function setCloudStatus(type, msg){
+  const el = document.getElementById('cloud-status');
+  if(!el) return;
+  const styles = {
+    loading: 'background:rgba(232,163,61,0.12); color:var(--amber); border:1px solid rgba(232,163,61,0.3);',
+    success: 'background:rgba(127,166,135,0.15); color:#2c5435; border:1px solid rgba(127,166,135,0.4);',
+    error:   'background:rgba(214,96,60,0.12);  color:#8c3520; border:1px solid rgba(214,96,60,0.3);'
+  };
+  el.style.cssText = (styles[type] || '') + ' display:block; margin-top:14px; padding:10px 14px; border-radius:8px; font-size:12.5px; font-family:"IBM Plex Mono",monospace; line-height:1.5;';
+  el.textContent = msg;
+}
+
+function setCloudButtonsDisabled(disabled){
+  const push = document.getElementById('btn-cloud-push');
+  const pull = document.getElementById('btn-cloud-pull');
+  if(push) push.disabled = disabled;
+  if(pull) pull.disabled = disabled;
+}
+
+function toggleCloudPasswordVisibility(){
+  const inp = document.getElementById('cloud-password');
+  const btn = document.getElementById('btn-toggle-pwd');
+  if(!inp) return;
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    if(btn) btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    if(btn) btn.textContent = '👁';
+  }
+}
+
+async function pushToCloud(){
+  const password = (document.getElementById('cloud-password')?.value || '').trim();
+  if(!password){
+    setCloudStatus('error', '⚠️ Ingresa la contraseña de backup antes de subir.');
+    return;
+  }
+
+  setCloudStatus('loading', '⏳ Subiendo datos a la nube...');
+  setCloudButtonsDisabled(true);
+
+  try{
+    const active = getActiveSemester();
+    active.data = data;
+    const payload = { password, data: rootData };
+
+    const res = await fetch('/api/backup-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const json = await res.json();
+
+    if(!res.ok){
+      const msg = json.error || 'Error desconocido.';
+      setCloudStatus('error', res.status === 401
+        ? '❌ Contraseña incorrecta. Verifica la contraseña de backup.'
+        : `❌ ${msg}`);
+      return;
+    }
+
+    const dateStr = json.date ? new Date(json.date).toLocaleString('es-MX') : '';
+    setCloudStatus('success', `✅ Backup subido correctamente a GitHub.\n${dateStr ? '📅 ' + dateStr : ''}`);
+  } catch(e){
+    setCloudStatus('error', '❌ Error de red. ¿Estás en la versión desplegada en Vercel?');
+  } finally {
+    setCloudButtonsDisabled(false);
+  }
+}
+
+async function pullFromCloud(){
+  const password = (document.getElementById('cloud-password')?.value || '').trim();
+  if(!password){
+    setCloudStatus('error', '⚠️ Ingresa la contraseña de backup antes de restaurar.');
+    return;
+  }
+
+  if(!confirm('¿Restaurar el backup desde la nube? Se reemplazarán los datos actuales con los del último backup guardado.')){
+    return;
+  }
+
+  setCloudStatus('loading', '⏳ Descargando backup desde la nube...');
+  setCloudButtonsDisabled(true);
+
+  try{
+    const res = await fetch('/api/backup-pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    const json = await res.json();
+
+    if(!res.ok){
+      const msg = json.error || 'Error desconocido.';
+      setCloudStatus('error', res.status === 401
+        ? '❌ Contraseña incorrecta. Verifica la contraseña de backup.'
+        : res.status === 404
+          ? '☁️ No se encontró ningún backup en la nube. Sube uno primero.'
+          : `❌ ${msg}`);
+      return;
+    }
+
+    const imported = json.data;
+    const isRootFormat = imported && Array.isArray(imported.semestres) && imported.semestres.length > 0;
+    const isLegacyFormat = imported && Array.isArray(imported.materias) && Array.isArray(imported.slots);
+
+    if(!isRootFormat && !isLegacyFormat){
+      setCloudStatus('error', '❌ El backup descargado tiene un formato inválido.');
+      return;
+    }
+
+    if(isRootFormat){
+      rootData = imported;
+    } else {
+      rootData = {
+        activeSemesterId: 'sem-cloud',
+        semestres: [{ id: 'sem-cloud', name: 'Semestre (Nube)', data: Object.assign(createEmptySemesterData(), imported) }]
+      };
+    }
+
+    updateActiveDataReference();
+    saveData();
+    render();
+    setCloudStatus('success', '✅ Backup restaurado desde la nube exitosamente.');
+  } catch(e){
+    setCloudStatus('error', '❌ Error de red. ¿Estás en la versión desplegada en Vercel?');
+  } finally {
+    setCloudButtonsDisabled(false);
+  }
+}
+
+function updateShift(newShift){
+  data.shift = newShift;
+  saveData();
+  renderGrid();
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function setDateLabel(){
+  const d = new Date();
+  const fmt = d.toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('today-label').textContent = fmt.charAt(0).toUpperCase()+fmt.slice(1);
+}
+
+function switchTab(tabName){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.toggle('active', p.id === 'panel-' + tabName);
+  });
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    switchTab(btn.dataset.tab);
+  });
+});
+
+// ---------- Backdrop & ESC key ----------
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    closeMateriaModal();
+    closeSlotModal();
+    closeWeekNoteModal();
+    closeSemesterModal();
+  }
+});
+const ovMat = document.getElementById('overlay-materia');
+if(ovMat){
+  ovMat.addEventListener('click', (e)=>{
+    if(e.target.id === 'overlay-materia') closeMateriaModal();
+  });
+}
+const ovSlot = document.getElementById('overlay-slot');
+if(ovSlot){
+  ovSlot.addEventListener('click', (e)=>{
+    if(e.target.id === 'overlay-slot') closeSlotModal();
+  });
+}
+const ovWeekNote = document.getElementById('overlay-week-note');
+if(ovWeekNote){
+  ovWeekNote.addEventListener('click', (e)=>{
+    if(e.target.id === 'overlay-week-note') closeWeekNoteModal();
+  });
+}
+const ovSem = document.getElementById('overlay-semester');
+if(ovSem){
+  ovSem.addEventListener('click', (e)=>{
+    if(e.target.id === 'overlay-semester') closeSemesterModal();
+  });
+}
+
+function calculateTotalHours(){
+  let total = 0;
+  data.slots.forEach(s => {
+    const startH = s.startHour !== undefined ? s.startHour : s.hour;
+    const endH = s.endHour !== undefined ? s.endHour : (s.hour + 1);
+    total += Math.max(1, endH - startH);
+  });
+  return total;
+}
+
+function getSemesterWeeks(){
+  const cfg = data.config || {};
+  if(!cfg.startDate || !cfg.endDate) return [];
+
+  const start = new Date(cfg.startDate + 'T00:00:00');
+  const end = new Date(cfg.endDate + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const totalMs = end.getTime() - start.getTime();
+  if(totalMs <= 0) return [];
+
+  const totalDays = Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)));
+  const totalWeeks = Math.ceil(totalDays / 7);
+
+  const weeks = [];
+  for(let i = 0; i < totalWeeks; i++){
+    const wStart = new Date(start.getTime() + (i * 7 * 24 * 60 * 60 * 1000));
+    const wEnd = new Date(Math.min(end.getTime(), wStart.getTime() + (6 * 24 * 60 * 60 * 1000)));
+
+    const isPast = today > wEnd;
+    const isFuture = today < wStart;
+    const isCurrent = !isPast && !isFuture;
+
+    weeks.push({
+      index: i + 1,
+      start: wStart,
+      end: wEnd,
+      isCurrent,
+      isPast,
+      isFuture
+    });
+  }
+  return weeks;
+}
+
+function formatNoteCreatedDate(isoStr){
+  if(!isoStr) return { short: '', full: '' };
+  const d = new Date(isoStr);
+  if(isNaN(d.getTime())) return { short: '', full: '' };
+
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+
+  const timeStr = d.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+  const full = d.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' }) + `, ${timeStr}`;
+
+  if(isToday){
+    return { short: `hoy, ${timeStr}`, full: `Creada hoy a las ${timeStr}` };
+  }
+  const dateStr = d.toLocaleDateString('es-MX', { day:'numeric', month:'short' });
+  return { short: dateStr, full: `Creada el ${full}` };
+}
+
+function renderWeeksViewer(){
+  const wrap = document.getElementById('weeks-viewer-wrap');
+  if(!wrap) return;
+
+  const cfg = data.config || {};
+  if(!cfg.startDate || !cfg.endDate){
+    wrap.innerHTML = `
+      <div style="background:var(--surface); border-radius:var(--radius); padding:18px; color:var(--ink); box-shadow:0 6px 18px rgba(0,0,0,0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:22px;">🗓️</span>
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px;">Visor de Semanas Desactivado</div>
+            <div style="font-size:12.5px; color:var(--ink-dim); margin-top:2px;">Define la fecha de inicio y fin de tu semestre en la pestaña <b>Ajustes</b> para desplegar las semanas y anclar notas.</div>
+          </div>
+        </div>
+        <button class="ghost" onclick="switchTab('ajustes')" style="font-size:12.5px; border-color:var(--amber); color:var(--amber); font-weight:600;">⚙️ Ir a Ajustes</button>
+      </div>
+    `;
+    return;
+  }
+
+  const weeks = getSemesterWeeks();
+  if(weeks.length === 0){
+    wrap.innerHTML = `<div class="empty" style="margin-bottom:24px;">Comprueba las fechas del curso en la pestaña Ajustes.</div>`;
+    return;
+  }
+
+  const currentW = weeks.find(w => w.isCurrent);
+  const curText = currentW ? `(Semana actual: ${currentW.index} de ${weeks.length})` : `(${weeks.length} Semanas)`;
+
+  let html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+      <div>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--chalk);">Visor de Semanas del Curso</span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk-dim); margin-left:8px;">${curText}</span>
+      </div>
+      <button class="primary" onclick="openWeekNoteModal(null, null)" style="font-size:12.5px;">+ Nueva Nota por Semana</button>
+    </div>
+    <div class="week-cards-grid">
+  `;
+
+  weeks.forEach(w => {
+    const sStr = w.start.toLocaleDateString('es-MX', { day:'numeric', month:'short' });
+    const eStr = w.end.toLocaleDateString('es-MX', { day:'numeric', month:'short' });
+    const badgeClass = w.isCurrent ? 'current' : w.isPast ? 'past' : 'future';
+    const badgeText = w.isCurrent ? '📍 Actual' : w.isPast ? 'Pasada' : 'Futura';
+
+    const notes = (data.weekNotes || []).filter(n => n.weekNumber === w.index);
+
+    html += `
+      <div class="week-card ${w.isCurrent ? 'current' : ''}">
+        <div>
+          <div class="week-card-header">
+            <div>
+              <div class="week-card-title">Semana ${w.index}</div>
+              <div class="week-card-dates">${sStr} — ${eStr}</div>
+            </div>
+            <span class="week-card-badge ${badgeClass}">${badgeText}</span>
+          </div>
+
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">`;
+
+    if(notes.length === 0){
+      html += `<div style="font-size:11px; color:var(--ink-dim); font-style:italic;">Sin notas ancladas</div>`;
+    } else {
+      notes.forEach(n => {
+        const matIds = n.materiaIds || (n.materiaId ? [n.materiaId] : []);
+        const linkedMats = matIds.map(id => data.materias.find(m => m.id === id)).filter(Boolean);
+        const dateInfo = formatNoteCreatedDate(n.createdAt);
+
+        let matBadgesHtml = '';
+        if(linkedMats.length > 0){
+          matBadgesHtml = linkedMats.map(m => `<span style="font-size:9.5px; padding:1px 6px; border-radius:4px; background:${m.color}22; color:${m.color}; font-weight:700; border:1px solid ${m.color}44;">📖 ${escapeHtml(m.nombre)}</span>`).join('');
+        }
+
+        html += `
+          <div class="week-note-item" style="border-left-color:${n.color || 'var(--amber)'};">
+            <div class="week-note-title-row">
+              <div class="week-note-title">${escapeHtml(n.text)}</div>
+              <div class="week-note-actions">
+                <button onclick="openWeekNoteModal(${w.index}, '${n.id}')" title="Editar nota">✏️</button>
+                <button onclick="deleteWeekNote('${n.id}')" title="Eliminar nota" style="color:var(--coral);">✕</button>
+              </div>
+            </div>
+            <div class="week-note-meta-row">
+              ${matBadgesHtml ? `<div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">${matBadgesHtml}</div>` : '<div></div>'}
+              ${dateInfo.short ? `<div class="week-note-date" title="${escapeHtml(dateInfo.full)}">🕒 ${dateInfo.short}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    html += `
+          </div>
+        </div>
+        <button class="ghost" onclick="openWeekNoteModal(${w.index}, null)" style="font-size:11px; padding:4px 8px; width:100%; margin-top:8px;">+ Anclar nota</button>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  wrap.innerHTML = html;
+}
+
+function selectColorSwatch(colorHex){
+  const colorsWrap = document.getElementById('wn-colors');
+  if(!colorsWrap) return;
+  colorsWrap.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
+
+  let swatch = Array.from(colorsWrap.querySelectorAll('.swatch')).find(s => s.dataset.color.toLowerCase() === colorHex.toLowerCase());
+  if(!swatch){
+    swatch = el('div', 'swatch sel', '');
+    swatch.style.background = colorHex;
+    swatch.dataset.color = colorHex;
+    swatch.addEventListener('click', () => {
+      colorsWrap.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
+      swatch.classList.add('sel');
+    });
+    colorsWrap.appendChild(swatch);
+  } else {
+    swatch.classList.add('sel');
+  }
+}
+
+function onWeekNoteSubjectToggle(chkInput){
+  const label = chkInput.closest('label');
+  if(label){
+    label.classList.toggle('sel', chkInput.checked);
+  }
+
+  const checkedInputs = Array.from(document.querySelectorAll('#wn-materias-checkboxes input[type="checkbox"]:checked'));
+  const hintEl = document.getElementById('wn-color-hint');
+
+  if(checkedInputs.length === 1){
+    const matId = checkedInputs[0].value;
+    const mat = data.materias.find(m => m.id === matId);
+    if(mat && mat.color){
+      selectColorSwatch(mat.color);
+      if(hintEl) hintEl.textContent = `💡 Sugerido por ${mat.nombre}`;
+    }
+  } else if(checkedInputs.length > 1){
+    if(hintEl) hintEl.textContent = `💡 ${checkedInputs.length} materias seleccionadas`;
+  } else {
+    if(hintEl) hintEl.textContent = '';
+  }
+}
+
+function openWeekNoteModal(weekNum, noteId){
+  const weeks = getSemesterWeeks();
+  if(weeks.length === 0){
+    alert('Primero debes definir las fechas del curso en la pestaña Ajustes.');
+    return;
+  }
+
+  editingWeekNoteId = noteId;
+  const title = document.getElementById('week-note-modal-title');
+  const delBtn = document.getElementById('btn-delete-week-note');
+  const hintEl = document.getElementById('wn-color-hint');
+  if(hintEl) hintEl.textContent = '';
+
+  const selWeek = document.getElementById('wn-week-select');
+  selWeek.innerHTML = '';
+  weeks.forEach(w => {
+    const sStr = w.start.toLocaleDateString('es-MX', { day:'numeric', month:'short' });
+    const opt = document.createElement('option');
+    opt.value = w.index;
+    opt.textContent = `Semana ${w.index} (${sStr})` + (w.isCurrent ? ' — Actual' : '');
+    if(weekNum && w.index === weekNum) opt.selected = true;
+    selWeek.appendChild(opt);
+  });
+
+  const noteToEdit = noteId ? (data.weekNotes || []).find(n => n.id === noteId) : null;
+  const currentMatIds = noteToEdit ? (noteToEdit.materiaIds || (noteToEdit.materiaId ? [noteToEdit.materiaId] : [])) : [];
+
+  const matContainer = document.getElementById('wn-materias-checkboxes');
+  matContainer.innerHTML = '';
+  if(data.materias.length === 0){
+    matContainer.innerHTML = `<div style="font-size:12px; color:var(--ink-dim); font-style:italic;">No hay materias registradas</div>`;
+  } else {
+    data.materias.forEach(m => {
+      const isChecked = currentMatIds.includes(m.id);
+      const chip = document.createElement('label');
+      chip.className = 'day-chip' + (isChecked ? ' sel' : '');
+      chip.style.fontSize = '12px';
+      chip.style.padding = '5px 10px';
+      chip.innerHTML = `<input type="checkbox" value="${m.id}" ${isChecked ? 'checked' : ''} onchange="onWeekNoteSubjectToggle(this)"> ${escapeHtml(m.nombre)}`;
+      matContainer.appendChild(chip);
+    });
+  }
+
+  const colorsWrap = document.getElementById('wn-colors');
+  colorsWrap.innerHTML = '';
+  let selectedColor = PALETTE[0];
+
+  if(noteToEdit){
+    title.textContent = 'Editar nota de semana';
+    delBtn.style.display = 'block';
+    selWeek.value = noteToEdit.weekNumber;
+    document.getElementById('wn-text').value = noteToEdit.text;
+    selectedColor = noteToEdit.color || PALETTE[0];
+  } else {
+    title.textContent = 'Nueva nota por semana';
+    delBtn.style.display = 'none';
+    document.getElementById('wn-text').value = '';
+    // Auto-recommend color if exactly 1 subject exists
+    if(currentMatIds.length === 1){
+      const mat = data.materias.find(m => m.id === currentMatIds[0]);
+      if(mat && mat.color) selectedColor = mat.color;
+    }
+  }
+
+  PALETTE.forEach(c => {
+    const sw = el('div', 'swatch' + (c === selectedColor ? ' sel' : ''), '');
+    sw.style.background = c;
+    sw.dataset.color = c;
+    sw.addEventListener('click', () => {
+      colorsWrap.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
+      sw.classList.add('sel');
+    });
+    colorsWrap.appendChild(sw);
+  });
+
+  if(currentMatIds.length === 1 && hintEl){
+    const mat = data.materias.find(m => m.id === currentMatIds[0]);
+    if(mat) hintEl.textContent = `💡 Sugerido por ${mat.nombre}`;
+  }
+
+  document.getElementById('overlay-week-note').classList.add('active');
+  setTimeout(() => document.getElementById('wn-text').focus(), 50);
+}
+
+function closeWeekNoteModal(){
+  document.getElementById('overlay-week-note').classList.remove('active');
+  editingWeekNoteId = null;
+}
+
+function saveWeekNote(){
+  const text = document.getElementById('wn-text').value.trim();
+  if(!text){
+    alert('Por favor escribe el contenido de la nota.');
+    return;
+  }
+  const weekNumber = parseInt(document.getElementById('wn-week-select').value);
+  const selSwatch = document.querySelector('#wn-colors .swatch.sel');
+  const color = selSwatch ? selSwatch.dataset.color : PALETTE[0];
+
+  const checkedMatInputs = Array.from(document.querySelectorAll('#wn-materias-checkboxes input[type="checkbox"]:checked'));
+  const materiaIds = checkedMatInputs.map(inp => inp.value);
+
+  if(!data.weekNotes) data.weekNotes = [];
+
+  if(editingWeekNoteId){
+    const n = data.weekNotes.find(x => x.id === editingWeekNoteId);
+    if(n){
+      n.weekNumber = weekNumber;
+      n.text = text;
+      n.color = color;
+      n.materiaIds = materiaIds;
+    }
+  } else {
+    data.weekNotes.push({
+      id: uid(),
+      weekNumber,
+      text,
+      color,
+      materiaIds,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  closeWeekNoteModal();
+  saveData();
+  render();
+}
+
+function deleteWeekNote(noteId){
+  if(!confirm('¿Eliminar esta nota de la semana?')) return;
+  data.weekNotes = (data.weekNotes || []).filter(n => n.id !== noteId);
+  saveData();
+  render();
+}
+
+function deleteCurrentWeekNote(){
+  if(editingWeekNoteId){
+    deleteWeekNote(editingWeekNoteId);
+    closeWeekNoteModal();
+  }
+}
+
+function renderCourseProgress(){
+  const card = document.querySelector('.progress-card');
+  if(!card) return;
+
+  const cfg = data.config || {};
+  if(!cfg.startDate || !cfg.endDate){
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">⚠️</span>
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink);">Fechas del Semestre No Configuradas</div>
+            <div style="font-size:12px; color:var(--ink-dim); margin-top:2px;">Define la fecha de inicio y fin del curso para activar el progreso visual del semestre.</div>
+          </div>
+        </div>
+        <button class="ghost" onclick="switchTab('ajustes')" style="font-size:12px; border-color:var(--amber); color:var(--amber); font-weight:600;">⚙️ Ir a Ajustes</button>
+      </div>
+    `;
+    return;
+  }
+
+  const start = new Date(cfg.startDate + 'T00:00:00');
+  const end = new Date(cfg.endDate + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const startStr = start.toLocaleDateString('es-MX', { day:'numeric', month:'short' });
+  const endStr = end.toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
+
+  const totalMs = end.getTime() - start.getTime();
+  const totalDays = Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)));
+  const totalWeeks = Math.ceil(totalDays / 7);
+
+  let pct = 0;
+  let weeksText = '';
+  let daysText = '';
+
+  if(today < start){
+    pct = 0;
+    weeksText = `El curso inicia el ${startStr}`;
+    const daysToStart = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    daysText = `Faltan ${daysToStart} días para iniciar`;
+  } else if(today > end){
+    pct = 100;
+    weeksText = `Curso concluido (${totalWeeks} semanas totales)`;
+    daysText = '🎉 Semestre finalizado';
+  } else {
+    const elapsedMs = today.getTime() - start.getTime();
+    const elapsedDays = Math.round(elapsedMs / (1000 * 60 * 60 * 24));
+    pct = Math.min(100, Math.max(0, Math.round((elapsedDays / totalDays) * 100)));
+    const currentWeek = Math.min(totalWeeks, Math.max(1, Math.ceil((elapsedDays + 1) / 7)));
+    const daysRemaining = Math.max(0, totalDays - elapsedDays);
+
+    weeksText = `Semana ${currentWeek} de ${totalWeeks}`;
+    daysText = `Quedan ${daysRemaining} ${daysRemaining === 1 ? 'día' : 'días'}`;
+  }
+
+  card.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+      <div>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--ink);">Progreso del Semestre</span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-dim); margin-left:8px;">(${startStr} — ${endStr})</span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--amber);">${pct}%</span>
+    </div>
+    <div class="bar" style="height:8px; margin-bottom:8px;">
+      <div style="width:${pct}%; background:linear-gradient(90deg, var(--sage), var(--amber)); transition:width 0.4s ease;"></div>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-dim); display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+      <span>${weeksText}</span>
+      <span>${daysText}</span>
+    </div>
+  `;
+}
+
+function renderSettingsInputs(){
+  const cfg = data.config || { startDate: '2026-08-01', endDate: '2026-12-15' };
+  const startInput = document.getElementById('cfg-start-date');
+  const endInput = document.getElementById('cfg-end-date');
+  if(startInput) startInput.value = cfg.startDate || '';
+  if(endInput) endInput.value = cfg.endDate || '';
+}
+
+function saveSettings(){
+  const startDate = document.getElementById('cfg-start-date').value;
+  const endDate = document.getElementById('cfg-end-date').value;
+
+  if(startDate && endDate && endDate < startDate){
+    alert('La fecha de fin debe ser posterior a la fecha de inicio.');
+    return;
+  }
+
+  data.config = { startDate, endDate };
+  saveData();
+  render();
+  alert('¡Ajustes guardados correctamente!');
+}
+
+// ---------- Render ----------
+function render(){
+  updateActiveDataReference();
+  renderGrid();
+  renderMaterias();
+  renderFaltas();
+  renderCourseProgress();
+  renderWeeksViewer();
+  renderSettingsInputs();
+
+  const totalFaltas = (data.faltas || []).length;
+  document.getElementById('stat-faltas').textContent = totalFaltas;
+
+  const totalHoras = calculateTotalHours();
+  document.getElementById('stat-horas').textContent = `${totalHoras}h`;
+}
+
+function renderGrid(){
+  const shiftKey = data.shift || 'vespertino';
+  const select = document.getElementById('shift-select');
+  if(select && select.value !== shiftKey){ select.value = shiftKey; }
+
+  const hours = SHIFTS[shiftKey] || SHIFTS.vespertino;
+  const grid = document.getElementById('schedule-grid');
+  grid.innerHTML = '';
+
+  // 1. Day headers (Row 1)
+  const emptyHead = el('div','g-head','');
+  emptyHead.style.gridColumn = '1';
+  emptyHead.style.gridRow = '1';
+  grid.appendChild(emptyHead);
+
+  DAYS.forEach((d, dIdx) => {
+    const head = el('div','g-head', d);
+    head.style.gridColumn = (dIdx + 2).toString();
+    head.style.gridRow = '1';
+    grid.appendChild(head);
+  });
+
+  // 2. Time labels & Background cells (Rows 2..N)
+  hours.forEach((h, hIdx) => {
+    const rIdx = hIdx + 2;
+    const timeLabel = el('div','g-time', formatHour(h));
+    timeLabel.style.gridColumn = '1';
+    timeLabel.style.gridRow = rIdx.toString();
+    grid.appendChild(timeLabel);
+
+    DAYS.forEach((d, dIdx) => {
+      const cell = el('div','g-cell','');
+      cell.style.gridColumn = (dIdx + 2).toString();
+      cell.style.gridRow = rIdx.toString();
+      cell.addEventListener('click', () => openSlotModal(dIdx, h));
+      grid.appendChild(cell);
+    });
+  });
+
+  // 3. Flexible Class Blocks (spanning grid rows)
+  data.slots.forEach(slot => {
+    const mat = data.materias.find(m => m.id === slot.materiaId);
+    if(!mat) return;
+
+    const sHour = slot.startHour !== undefined ? slot.startHour : slot.hour;
+    const eHour = slot.endHour !== undefined ? slot.endHour : (slot.hour + 1);
+
+    const sRowIdx = hours.indexOf(sHour);
+    if(sRowIdx === -1) return; // Outside current shift view
+
+    let eRowIdx = hours.indexOf(eHour);
+    if(eRowIdx === -1){
+      eRowIdx = sRowIdx + (eHour - sHour);
+    }
+
+    const spanRows = Math.max(1, eRowIdx - sRowIdx);
+    const startRow = sRowIdx + 2;
+
+    const block = el('div','g-block','');
+    block.style.gridColumn = (slot.day + 2).toString();
+    block.style.gridRow = `${startRow} / span ${spanRows}`;
+    block.style.background = mat.color;
+    block.title = 'Haz clic para editar o eliminar esta clase';
+
+    const descText = slot.aula || mat.descripcion;
+
+    let content = `<b>${escapeHtml(mat.nombre)}</b>`;
+    if(mat.profesor) content += `<div style="font-size:11px;opacity:0.9;">${escapeHtml(mat.profesor)}</div>`;
+    if(descText) content += `<div class="g-aula">📍 ${escapeHtml(descText)}</div>`;
+    content += `<div class="g-time-badge">🕒 ${formatHour(sHour)} - ${formatHour(eHour)}</div>`;
+
+    block.innerHTML = content;
+    block.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openSlotModal(slot.day, sHour, slot.materiaId, slot);
+    });
+    grid.appendChild(block);
+  });
+}
+
+function getAbsenceColor(pct){
+  const clamped = Math.max(0, Math.min(100, pct));
+  // Transición suave de Verde (135° HSL) pasando por Amarillo/Ámbar hasta Rojo Coral (10° HSL)
+  const hue = 135 - (clamped * 1.25);
+  return `hsl(${Math.round(hue)}, 70%, 46%)`;
+}
+
+function renderMaterias(){
+  const wrap = document.getElementById('materias-cards');
+  wrap.innerHTML = '';
+  data.materias.forEach(m=>{
+    const count = data.faltas.filter(f=>f.materiaId===m.id).length;
+    const pct = Math.min(100, Math.round((count/(m.limite||1))*100));
+    const barColor = getAbsenceColor(pct);
+    const card = el('div','mcard','');
+    card.style.borderLeftColor = m.color;
+    card.innerHTML = `
+      <h3>${escapeHtml(m.nombre)}</h3>
+      <div class="prof">${escapeHtml(m.profesor||'Sin profesor asignado')}</div>
+      ${m.descripcion ? `<div style="font-size:12px; color:var(--ink-dim); margin-bottom:10px; font-weight:500;">📍 ${escapeHtml(m.descripcion)}</div>` : ''}
+      <div class="faltas-line"><span>Faltas</span><span>${count} / ${m.limite}</span></div>
+      <div class="bar"><div style="width:${pct}%; background:${barColor}"></div></div>
+      <div class="actions">
+        <button class="ghost" onclick="openSlotModalForMateria('${m.id}')">+ Horario</button>
+        <button class="ghost" onclick="openMateriaModal('${m.id}')">Editar</button>
+        <button class="ghost danger" onclick="deleteMateria('${m.id}')">Eliminar</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+  const addCard = el('div','addcard','+ Agregar materia');
+  addCard.addEventListener('click', ()=> openMateriaModal(null));
+  wrap.appendChild(addCard);
+}
+
+function renderFaltas(){
+  const wrap = document.getElementById('faltas-list');
+  wrap.innerHTML = '';
+  if(data.materias.length===0){
+    wrap.appendChild(el('div','empty','Agrega materias primero para poder registrar inasistencias.'));
+    return;
+  }
+  data.materias.forEach(m=>{
+    const registros = data.faltas.filter(f=>f.materiaId===m.id).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+    const row = el('div','frow','');
+    const dot = el('div','dot',''); dot.style.background = m.color;
+    row.appendChild(dot);
+    const name = el('div','name', m.nombre);
+    row.appendChild(name);
+    const count = el('div','count', registros.length+' / '+m.limite+' faltas');
+    row.appendChild(count);
+    const addBtn = el('button','ghost','+ Registrar falta');
+    addBtn.addEventListener('click', ()=> registrarFalta(m.id));
+    row.appendChild(addBtn);
+    if(registros.length){
+      const hist = el('div','history','');
+      registros.forEach(r=>{
+        const chip = document.createElement('span');
+        chip.innerHTML = fmtDate(r.fecha)+' ';
+        const del = document.createElement('button');
+        del.textContent = '✕';
+        del.title = 'Eliminar falta';
+        del.addEventListener('click', ()=> deleteFalta(r.id));
+        chip.appendChild(del);
+        hist.appendChild(chip);
+      });
+      row.appendChild(hist);
+    }
+    wrap.appendChild(row);
+  });
+}
+
+// ---------- Materia CRUD ----------
+function openMateriaModal(id){
+  editingMateriaId = id;
+  const colorsWrap = document.getElementById('m-colors');
+  colorsWrap.innerHTML = '';
+  let selectedColor = PALETTE[0];
+  if(id){
+    const m = data.materias.find(x=>x.id===id);
+    document.getElementById('materia-modal-title').textContent = 'Editar materia';
+    document.getElementById('m-nombre').value = m.nombre;
+    document.getElementById('m-profesor').value = m.profesor||'';
+    document.getElementById('m-descripcion').value = m.descripcion||'';
+    document.getElementById('m-limite').value = m.limite;
+    selectedColor = m.color;
+  } else {
+    document.getElementById('materia-modal-title').textContent = 'Nueva materia';
+    document.getElementById('m-nombre').value = '';
+    document.getElementById('m-profesor').value = '';
+    document.getElementById('m-descripcion').value = '';
+    document.getElementById('m-limite').value = 5;
+  }
+  PALETTE.forEach(c=>{
+    const sw = el('div','swatch'+(c===selectedColor?' sel':''),'');
+    sw.style.background = c;
+    sw.dataset.color = c;
+    sw.addEventListener('click', ()=>{
+      colorsWrap.querySelectorAll('.swatch').forEach(s=>s.classList.remove('sel'));
+      sw.classList.add('sel');
+    });
+    colorsWrap.appendChild(sw);
+  });
+  document.getElementById('overlay-materia').classList.add('active');
+  setTimeout(()=> document.getElementById('m-nombre').focus(), 50);
+}
+
+function closeMateriaModal(){ document.getElementById('overlay-materia').classList.remove('active'); }
+
+function saveMateria(){
+  const nombre = document.getElementById('m-nombre').value.trim();
+  if(!nombre){ return; }
+  const profesor = document.getElementById('m-profesor').value.trim();
+  const descripcion = document.getElementById('m-descripcion').value.trim();
+  const limite = parseInt(document.getElementById('m-limite').value) || 5;
+  const selSwatch = document.querySelector('#m-colors .swatch.sel');
+  const color = selSwatch ? selSwatch.dataset.color : PALETTE[0];
+
+  if(editingMateriaId){
+    const m = data.materias.find(x=>x.id===editingMateriaId);
+    m.nombre = nombre; m.profesor = profesor; m.descripcion = descripcion; m.limite = limite; m.color = color;
+  } else {
+    data.materias.push({ id: uid(), nombre, profesor, descripcion, limite, color });
+  }
+  closeMateriaModal();
+  saveData();
+  render();
+}
+
+function deleteMateria(id){
+  if(!confirm('¿Seguro que deseas eliminar esta materia y sus datos asociados?')) return;
+  data.materias = data.materias.filter(m=>m.id!==id);
+  data.slots = data.slots.filter(s=>s.materiaId!==id);
+  data.faltas = data.faltas.filter(f=>f.materiaId!==id);
+  saveData();
+  render();
+}
+
+// ---------- Horario CRUD Flexible (Crear & Editar) ----------
+function updateSlotDescFromMateria(){
+  const selMatId = document.getElementById('slot-materia').value;
+  const selectedMat = data.materias.find(m => m.id === selMatId);
+  const input = document.getElementById('slot-aula');
+  const badge = document.getElementById('slot-desc-badge');
+  const hint = document.getElementById('slot-desc-hint');
+
+  if(selectedMat && selectedMat.descripcion){
+    input.value = selectedMat.descripcion;
+    badge.style.display = 'none';
+    hint.style.display = 'none';
+  } else {
+    input.value = '';
+    badge.style.display = 'inline-block';
+    hint.style.display = 'block';
+  }
+}
+
+function openSlotModal(day, hour, materiaIdDefault, slotToEdit){
+  if(data.materias.length === 0){
+    openMateriaModal(null);
+    return;
+  }
+
+  editingSlotId = slotToEdit ? slotToEdit.id : null;
+  const title = document.getElementById('slot-modal-title');
+  const deleteBtn = document.getElementById('btn-delete-slot');
+
+  if(slotToEdit){
+    title.textContent = 'Editar clase en horario';
+    deleteBtn.style.display = 'block';
+  } else {
+    title.textContent = 'Asignar horario de clase';
+    deleteBtn.style.display = 'none';
+  }
+
+  const activeMatId = slotToEdit ? slotToEdit.materiaId : materiaIdDefault;
+  const selMat = document.getElementById('slot-materia');
+  selMat.innerHTML = '';
+  data.materias.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.nombre;
+    if(activeMatId && m.id === activeMatId) opt.selected = true;
+    selMat.appendChild(opt);
+  });
+
+  selMat.onchange = updateSlotDescFromMateria;
+
+  const activeDays = slotToEdit ? [slotToEdit.day] : [day];
+  const daysWrap = document.getElementById('slot-days-checkboxes');
+  daysWrap.innerHTML = '';
+  DAYS.forEach((dName, idx) => {
+    const isChecked = activeDays.includes(idx);
+    const label = document.createElement('label');
+    label.className = 'day-chip' + (isChecked ? ' sel' : '');
+    label.innerHTML = `<input type="checkbox" value="${idx}" ${isChecked ? 'checked' : ''}> ${dName}`;
+    label.querySelector('input').addEventListener('change', (e) => {
+      label.classList.toggle('sel', e.target.checked);
+    });
+    daysWrap.appendChild(label);
+  });
+
+  const startSelect = document.getElementById('slot-start-hour');
+  const endSelect = document.getElementById('slot-end-hour');
+  startSelect.innerHTML = '';
+  endSelect.innerHTML = '';
+
+  const allHours = [];
+  for(let h = 6; h <= 22; h++) allHours.push(h);
+
+  let startH = hour !== undefined ? hour : 14;
+  let endH = startH + 1;
+
+  if(slotToEdit){
+    startH = slotToEdit.startHour !== undefined ? slotToEdit.startHour : slotToEdit.hour;
+    endH = slotToEdit.endHour !== undefined ? slotToEdit.endHour : (slotToEdit.hour + 1);
+  }
+
+  allHours.forEach(h => {
+    const optS = document.createElement('option');
+    optS.value = h; optS.textContent = formatHour(h);
+    if(h === startH) optS.selected = true;
+    startSelect.appendChild(optS);
+
+    const optE = document.createElement('option');
+    optE.value = h; optE.textContent = formatHour(h);
+    if(h === endH) optE.selected = true;
+    endSelect.appendChild(optE);
+  });
+
+  startSelect.onchange = () => {
+    const sh = parseInt(startSelect.value);
+    if(parseInt(endSelect.value) <= sh){
+      endSelect.value = Math.min(22, sh + 1);
+    }
+  };
+
+  updateSlotDescFromMateria();
+  document.getElementById('overlay-slot').classList.add('active');
+}
+
+function openSlotModalForMateria(materiaId){
+  openSlotModal(0, 14, materiaId, null);
+}
+
+function closeSlotModal(){
+  document.getElementById('overlay-slot').classList.remove('active');
+  editingSlotId = null;
+}
+
+function deleteCurrentSlot(){
+  if(!editingSlotId) return;
+  if(confirm('¿Seguro que deseas eliminar esta clase del horario?')){
+    removeSlot(editingSlotId);
+    closeSlotModal();
+  }
+}
+
+function saveSlot(){
+  const materiaId = document.getElementById('slot-materia').value;
+  if(!materiaId) return;
+
+  const checkedDays = Array.from(document.querySelectorAll('#slot-days-checkboxes input:checked')).map(cb => parseInt(cb.value));
+  if(checkedDays.length === 0){
+    alert('Por favor selecciona al menos un día.');
+    return;
+  }
+
+  const startHour = parseInt(document.getElementById('slot-start-hour').value);
+  let endHour = parseInt(document.getElementById('slot-end-hour').value);
+  if(endHour <= startHour){
+    endHour = startHour + 1;
+  }
+
+  const activeMat = data.materias.find(m => m.id === materiaId);
+  const aula = activeMat ? (activeMat.descripcion || '') : '';
+
+  if(editingSlotId){
+    const existing = data.slots.find(s => s.id === editingSlotId);
+    if(existing){
+      existing.materiaId = materiaId;
+      existing.day = checkedDays[0];
+      existing.startHour = startHour;
+      existing.endHour = endHour;
+      existing.aula = aula;
+    }
+    for(let i = 1; i < checkedDays.length; i++){
+      data.slots.push({
+        id: uid(),
+        day: checkedDays[i],
+        startHour,
+        endHour,
+        materiaId,
+        aula
+      });
+    }
+  } else {
+    checkedDays.forEach(day => {
+      data.slots.push({
+        id: uid(),
+        day,
+        startHour,
+        endHour,
+        materiaId,
+        aula
+      });
+    });
+  }
+
+  closeSlotModal();
+  saveData();
+  render();
+}
+
+function removeSlot(slotId){
+  data.slots = data.slots.filter(s=>s.id!==slotId);
+  saveData();
+  render();
+}
+
+// ---------- Faltas ----------
+function registrarFalta(materiaId){
+  const fecha = new Date().toISOString().slice(0,10);
+  data.faltas.push({ id: uid(), materiaId, fecha });
+  saveData();
+  render();
+}
+function deleteFalta(id){
+  data.faltas = data.faltas.filter(f=>f.id!==id);
+  saveData();
+  render();
+}
+
+// ---------- utils ----------
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(text!==undefined) e.textContent = text;
+  return e;
+}
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
+}
+
+setDateLabel();
+loadData();
+</script>
+</body>
+</html>
