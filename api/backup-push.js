@@ -1,4 +1,6 @@
-﻿const crypto = require("crypto");
+const crypto = require("crypto");
+const { checkRateLimit, recordFailedAttempt, resetFailedAttempts } = require("./_rate-limit");
+const { setCorsHeaders } = require("./_cors");
 
 function timingSafeCompare(a, b) {
   try {
@@ -13,20 +15,34 @@ function timingSafeCompare(a, b) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  // 1. Verificar Límite de Intentos (Rate Limiting)
+  const rateLimitStatus = await checkRateLimit(req);
+  if (rateLimitStatus.isRateLimited) {
+    res.setHeader("Retry-After", String(rateLimitStatus.retryAfterSec));
+    return res.status(429).json({
+      error: `Demasiados intentos fallidos. Por favor espera ${Math.ceil(rateLimitStatus.retryAfterSec / 60)} minuto(s) antes de reintentar.`
+    });
+  }
+
   const { password, data } = req.body || {};
 
-  if (!password || !process.env.BACKUP_PASSWORD)
+  if (!password || !process.env.BACKUP_PASSWORD) {
+    await recordFailedAttempt(req);
     return res.status(401).json({ error: "Unauthorized" });
+  }
 
-  if (!timingSafeCompare(password, process.env.BACKUP_PASSWORD))
+  if (!timingSafeCompare(password, process.env.BACKUP_PASSWORD)) {
+    await recordFailedAttempt(req);
     return res.status(401).json({ error: "Contrasena incorrecta" });
+  }
+
+  // Éxito: Limpiar contador de intentos fallidos
+  await resetFailedAttempts(req);
 
   if (!data || typeof data !== "object")
     return res.status(400).json({ error: "No se proporcionaron datos validos para el backup." });

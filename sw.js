@@ -39,8 +39,8 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Ignorar peticiones no GET y rutas API de backend/backup
-  if (req.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // Ignorar peticiones no GET, esquemas no HTTP (ej. chrome-extension://) y rutas API de backend/backup
+  if (req.method !== 'GET' || !url.protocol.startsWith('http') || url.pathname.startsWith('/api/')) {
     return;
   }
 

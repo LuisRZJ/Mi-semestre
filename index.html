@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Metadata PWA e iOS Safari -->
 <link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mi Semestre">
@@ -122,6 +123,28 @@
     font-family: 'IBM Plex Sans', sans-serif;
     min-height: 100vh;
   }
+  /* ---- Scrollbars Globales con Color de Acento ---- */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--amber) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--amber);
+    border-radius: 99px;
+    transition: background 0.2s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--amber);
+    filter: brightness(1.15);
+  }
   .wrap{ max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
 
   header.top{
@@ -162,12 +185,27 @@
     border-radius: var(--radius); padding: 18px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
   }
+  .schedule-grid-wrap{
+    width: 100%;
+    max-height: 520px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: var(--amber) transparent;
+  }
+  .schedule-grid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .schedule-grid-wrap::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 99px; }
+  .schedule-grid-wrap::-webkit-scrollbar-thumb { background: var(--amber); border-radius: 99px; }
+
   .schedule-grid{
     display:grid;
-    grid-template-columns: 68px repeat(5, 1fr);
-    grid-auto-rows: minmax(48px, auto);
+    grid-template-columns: 64px repeat(5, minmax(115px, 1fr));
+    min-width: 640px;
+    grid-auto-rows: 64px;
     position: relative;
-    border-top: 1px solid var(--glass-border); border-left: 1px solid var(--glass-border);
   }
   .g-head, .g-time, .g-cell{
     border-right: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
@@ -176,24 +214,36 @@
     font-family:'IBM Plex Mono', monospace; font-size: 11px; letter-spacing:.06em;
     text-transform: uppercase; color: var(--ink-dim); text-align:center; padding: 8px 4px;
     display:flex; align-items:center; justify-content:center;
+    position: sticky; top: 0; z-index: 15;
+    background: var(--bg);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  .g-head.g-head-topleft{
+    position: sticky; top: 0; left: 0; z-index: 25;
+    background: var(--bg);
   }
   .g-time{
     font-family:'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-dim);
     display:flex; align-items:flex-start; justify-content:flex-end; padding: 6px 6px 0 0;
+    position: sticky; left: 0; z-index: 15;
+    background: var(--bg);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   }
-  .g-cell{ position:relative; min-height: 48px; cursor:pointer; }
+  .g-cell{ position:relative; min-height: 64px; cursor:pointer; }
   .g-cell:hover{ background: rgba(232,163,61,0.12); }
   
   .g-block{
-    margin: 1px 2px; border-radius: 6px; padding: 5px 7px;
-    font-size: 11.5px; line-height:1.25; color:#fff; cursor:pointer; overflow:hidden;
+    margin: 1px 2px; border-radius: 6px; padding: 6px 8px;
+    font-size: 11.5px; line-height:1.25; color:#fff; cursor:pointer;
+    overflow: hidden; word-break: break-word;
     font-family:'IBM Plex Sans', sans-serif; font-weight:500; z-index: 2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.15s ease, box-shadow 0.15s ease, min-height 0.15s ease;
-    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18); transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex; flex-direction: column; justify-content: flex-start; gap: 2px;
   }
+
   .g-block:hover{ transform: scale(1.02); box-shadow: 0 6px 18px rgba(0,0,0,0.32); z-index: 10; }
   .g-block.compact{ padding: 3px 6px; justify-content: center; }
-  .g-block.compact:hover{ min-height: 54px !important; transform: scale(1.04); z-index: 10; }
+  .g-block.compact:hover{ min-height: 58px !important; transform: scale(1.04); z-index: 10; }
   .g-block b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:12px; margin-bottom: 1px; }
   .g-block .g-time-badge{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; opacity:0.9; margin-top:2px; }
   .g-block .g-aula{ font-size:10px; font-weight:600; opacity:0.95; margin-top:2px; }
@@ -389,10 +439,9 @@
     background: var(--option-checked-bg, #2e4a30);
   }
   @media (max-width: 640px){
-    .schedule-grid{ grid-template-columns: 48px repeat(5, 1fr); }
-    .g-head{ font-size: 9.5px; }
-    .g-block{ font-size:10px; padding: 4px; }
-    .g-block b{ font-size:10.5px; }
+    .g-head{ font-size: 10px; }
+    .g-block{ font-size: 10.5px; padding: 4px 5px; }
+    .g-block b{ font-size: 11px; }
   }
 
   /* ---- Animaciones de Carga y Paneles ---- */
@@ -492,7 +541,9 @@
       </div>
     </div>
     <div class="grid-card">
-      <div id="schedule-grid" class="schedule-grid"></div>
+      <div class="schedule-grid-wrap">
+        <div id="schedule-grid" class="schedule-grid"></div>
+      </div>
       <div class="hint">Toca una celda o materia para gestionar · Permite clases con duración flexible</div>
     </div>
   </section>
@@ -525,7 +576,7 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;">
         <button class="primary" type="button" onclick="openSemesterModal(false)" style="font-size:12.5px;">+ Nuevo Semestre</button>
         <button class="ghost" type="button" onclick="openSemesterModal(true)" style="font-size:12.5px;">✏️ Renombrar</button>
-        <button class="ghost danger" type="button" onclick="deleteCurrentSemester()" style="font-size:12.5px;">🗑️ Eliminar</button>
+        <button class="ghost danger" type="button" onclick="deleteActiveSemester()" style="font-size:12.5px;">🗑️ Eliminar</button>
       </div>
     </div>
 
@@ -620,6 +671,7 @@
 
     <!-- Card 5: Backup en la Nube y Copia Local -->
     <div class="grid-card" style="max-width:540px; margin:20px auto 0; padding:24px;">
+      <div id="safety-backup-banner" style="display:none; margin-bottom:18px; padding:12px 16px; border-radius:10px; background:rgba(var(--amber-rgb), 0.14); border:1px solid var(--amber); box-shadow:0 4px 16px rgba(0,0,0,0.15);"></div>
       <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 4px; font-size:20px; color:var(--ink);">☁️ Backup en la Nube</h2>
       <p style="font-size:13px; color:var(--ink-dim); margin:0 0 18px;">Guarda o restaura todos tus semestres en un repositorio privado de GitHub. La contraseña protege el acceso al servidor.</p>
 
@@ -799,7 +851,112 @@
   </div>
 </div>
 
+<!-- Modal Genérico para Alertas y Confirmaciones -->
+<div class="overlay" id="overlay-custom-dialog" style="z-index: 10000;" role="dialog" aria-modal="true">
+  <div class="modal custom-dialog-card" style="max-width:390px; text-align:center; padding:24px 22px;">
+    <div id="custom-dialog-icon" style="font-size:36px; margin-bottom:10px; line-height:1;"></div>
+    <h2 id="custom-dialog-title" style="margin:0 0 10px; font-size:18px; font-family:'Space Grotesk',sans-serif; color:var(--chalk);"></h2>
+    <p id="custom-dialog-message" style="margin:0 0 20px; font-size:13.5px; line-height:1.45; color:var(--chalk-dim); font-family:'IBM Plex Sans',sans-serif; word-break:break-word;"></p>
+    <div class="modal-actions" id="custom-dialog-actions" style="display:flex; justify-content:center; gap:10px; margin-top:0;"></div>
+  </div>
+</div>
+
 <script>
+// ---------- Sistema Unificado de Modales de Alerta y Confirmación ----------
+let customDialogResolve = null;
+
+function closeCustomDialog(result){
+  const overlay = document.getElementById('overlay-custom-dialog');
+  if(overlay) overlay.classList.remove('active');
+  if(customDialogResolve){
+    const res = customDialogResolve;
+    customDialogResolve = null;
+    res(result);
+  }
+}
+
+function showCustomAlert(title, message, type = 'info'){
+  return new Promise((resolve) => {
+    customDialogResolve = resolve;
+    const overlay = document.getElementById('overlay-custom-dialog');
+    const iconEl = document.getElementById('custom-dialog-icon');
+    const titleEl = document.getElementById('custom-dialog-title');
+    const msgEl = document.getElementById('custom-dialog-message');
+    const actionsEl = document.getElementById('custom-dialog-actions');
+
+    let iconHtml = 'ℹ️';
+    if(type === 'warning') iconHtml = '⚠️';
+    if(type === 'error') iconHtml = '❌';
+    if(type === 'success') iconHtml = '🎉';
+
+    iconEl.innerHTML = iconHtml;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    actionsEl.innerHTML = `
+      <button class="primary" type="button" id="btn-custom-alert-ok" style="min-width:110px;">Entendido</button>
+    `;
+
+    overlay.classList.add('active');
+
+    const okBtn = document.getElementById('btn-custom-alert-ok');
+    if(okBtn){
+      okBtn.focus();
+      okBtn.onclick = () => closeCustomDialog(true);
+    }
+  });
+}
+
+function showCustomConfirm(title, message, options = {}){
+  return new Promise((resolve) => {
+    customDialogResolve = resolve;
+    const overlay = document.getElementById('overlay-custom-dialog');
+    const iconEl = document.getElementById('custom-dialog-icon');
+    const titleEl = document.getElementById('custom-dialog-title');
+    const msgEl = document.getElementById('custom-dialog-message');
+    const actionsEl = document.getElementById('custom-dialog-actions');
+
+    const isDanger = options.danger === true;
+    const iconHtml = options.icon || (isDanger ? '🗑️' : '❓');
+    const confirmText = options.confirmText || (isDanger ? 'Sí, eliminar' : 'Aceptar');
+    const cancelText = options.cancelText || 'Cancelar';
+
+    iconEl.innerHTML = iconHtml;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    actionsEl.innerHTML = `
+      <button class="ghost" type="button" id="btn-custom-confirm-cancel" style="min-width:90px;">${escapeHtml(cancelText)}</button>
+      <button class="${isDanger ? 'ghost danger' : 'primary'}" type="button" id="btn-custom-confirm-ok" style="min-width:110px;">${escapeHtml(confirmText)}</button>
+    `;
+
+    overlay.classList.add('active');
+
+    const cancelBtn = document.getElementById('btn-custom-confirm-cancel');
+    const okBtn = document.getElementById('btn-custom-confirm-ok');
+
+    if(cancelBtn) cancelBtn.onclick = () => closeCustomDialog(false);
+    if(okBtn){
+      okBtn.focus();
+      okBtn.onclick = () => closeCustomDialog(true);
+    }
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  const overlay = document.getElementById('overlay-custom-dialog');
+  if(overlay && overlay.classList.contains('active')){
+    if(e.key === 'Escape'){
+      e.stopPropagation();
+      closeCustomDialog(false);
+    } else if(e.key === 'Enter'){
+      e.stopPropagation();
+      e.preventDefault();
+      const okBtn = document.getElementById('btn-custom-confirm-ok') || document.getElementById('btn-custom-alert-ok');
+      if(okBtn) okBtn.click();
+    }
+  }
+});
 const PALETTE = ['#E8A33D','#D6603C','#7FA687','#5B8CBF','#B37FBF','#C2A34D','#4F9D8F','#C46B8A'];
 const DAYS = ['Lun','Mar','Mié','Jue','Vie'];
 // Defaults de turnos: { start (inclusivo), end (exclusivo) }
@@ -904,20 +1061,30 @@ function formatHour(h){
 }
 
 function parseToMinutes(val){
-  if(val === undefined || val === null || val === '') return 0;
-  if(typeof val === 'number'){ return Math.round(val * 60); }
+  if(val === undefined || val === null || val === '') return NaN;
+  if(typeof val === 'number') return Math.round(val * 60);
   if(typeof val === 'string'){
-    if(val.includes(':')){
-      const [h, m] = val.split(':').map(Number);
-      return (h || 0) * 60 + (m || 0);
+    const trimmed = val.trim();
+    if(!trimmed) return NaN;
+    if(trimmed.includes(':')){
+      const parts = trimmed.split(':');
+      let h = parseInt(parts[0], 10);
+      let m = parseInt(parts[1], 10) || 0;
+      if(isNaN(h)) return NaN;
+      const isPM = /pm/i.test(trimmed);
+      const isAM = /am/i.test(trimmed);
+      if(isPM && h < 12) h += 12;
+      if(isAM && h === 12) h = 0;
+      return h * 60 + m;
     }
-    const num = parseFloat(val);
+    const num = parseFloat(trimmed);
     if(!isNaN(num)) return Math.round(num * 60);
   }
-  return 0;
+  return NaN;
 }
 
 function minutesToTimeStr(totalMinutes){
+  if(isNaN(totalMinutes)) totalMinutes = 14 * 60;
   let h = Math.floor(totalMinutes / 60);
   let m = Math.round(totalMinutes % 60);
   if(m >= 60){ h += 1; m -= 60; }
@@ -928,7 +1095,8 @@ function minutesToTimeStr(totalMinutes){
 }
 
 function formatTime(val){
-  const mins = parseToMinutes(val);
+  let mins = parseToMinutes(val);
+  if(isNaN(mins)) mins = 14 * 60;
   let h = Math.floor(mins / 60);
   let m = Math.round(mins % 60);
   if(m >= 60){ h += 1; m -= 60; }
@@ -939,16 +1107,36 @@ function formatTime(val){
 }
 
 function getSlotStartMinutes(slot){
-  if(slot.startTime !== undefined) return parseToMinutes(slot.startTime);
-  if(slot.startHour !== undefined) return parseToMinutes(slot.startHour);
-  if(slot.hour !== undefined) return parseToMinutes(slot.hour);
+  if(!slot) return 14 * 60;
+  if(slot.startTime !== undefined && slot.startTime !== null && slot.startTime !== ''){
+    const m = parseToMinutes(slot.startTime);
+    if(!isNaN(m)) return m;
+  }
+  if(slot.startHour !== undefined && slot.startHour !== null && slot.startHour !== ''){
+    const m = parseToMinutes(slot.startHour);
+    if(!isNaN(m)) return m;
+  }
+  if(slot.hour !== undefined && slot.hour !== null && slot.hour !== ''){
+    const m = parseToMinutes(slot.hour);
+    if(!isNaN(m)) return m;
+  }
   return 14 * 60;
 }
 
 function getSlotEndMinutes(slot){
-  if(slot.endTime !== undefined) return parseToMinutes(slot.endTime);
-  if(slot.endHour !== undefined) return parseToMinutes(slot.endHour);
-  if(slot.hour !== undefined) return parseToMinutes(slot.hour + 1);
+  if(!slot) return 15 * 60;
+  if(slot.endTime !== undefined && slot.endTime !== null && slot.endTime !== ''){
+    const m = parseToMinutes(slot.endTime);
+    if(!isNaN(m)) return m;
+  }
+  if(slot.endHour !== undefined && slot.endHour !== null && slot.endHour !== ''){
+    const m = parseToMinutes(slot.endHour);
+    if(!isNaN(m)) return m;
+  }
+  if(slot.hour !== undefined && slot.hour !== null && slot.hour !== ''){
+    const m = parseToMinutes(slot.hour + 1);
+    if(!isNaN(m)) return m;
+  }
   return 15 * 60;
 }
 
@@ -1197,16 +1385,9 @@ function saveTheme(themeId){
   saveData();
 }
 
-async function loadData(){
+function loadData(){
   try{
-    let raw = null;
-    if(window.storage && typeof window.storage.get === 'function'){
-      const res = await window.storage.get('escuela-data');
-      if(res && res.value) raw = res.value;
-    }
-    if(!raw){
-      raw = localStorage.getItem('escuela-data');
-    }
+    const raw = localStorage.getItem('escuela-data');
     if(raw){
       const parsed = JSON.parse(raw);
       if(parsed && parsed.semestres && Array.isArray(parsed.semestres)){
@@ -1243,14 +1424,11 @@ function hideAppLoader(){
   }
 }
 
-async function saveData(){
+function saveData(){
   try{
     const active = getActiveSemester();
     active.data = data;
     const json = JSON.stringify(rootData);
-    if(window.storage && typeof window.storage.set === 'function'){
-      await window.storage.set('escuela-data', json);
-    }
     localStorage.setItem('escuela-data', json);
   }catch(e){
     console.error('No se pudo guardar:', e);
@@ -1287,10 +1465,10 @@ function closeSemesterModal(){
   document.getElementById('overlay-semester').classList.remove('active');
 }
 
-function saveSemesterFromModal(){
+async function saveSemesterFromModal(){
   const nameInput = document.getElementById('sem-name').value.trim();
   if(!nameInput){
-    alert('Por favor ingresa un nombre para el semestre.');
+    await showCustomAlert('Campo requerido', 'Por favor ingresa un nombre para el semestre.', 'warning');
     return;
   }
 
@@ -1313,14 +1491,15 @@ function saveSemesterFromModal(){
   render();
 }
 
-function deleteCurrentSemester(){
+async function deleteActiveSemester(){
   if(rootData.semestres.length <= 1){
-    alert('No puedes eliminar el único semestre activo. Siempre debe existir al menos un semestre.');
+    await showCustomAlert('Acción no permitida', 'No puedes eliminar el único semestre activo. Siempre debe existir al menos un semestre.', 'warning');
     return;
   }
 
   const active = getActiveSemester();
-  if(!confirm(`¿Estás seguro de eliminar "${active.name}" y todos sus datos de materias, horario y faltas? Esta acción no se puede deshacer.`)) return;
+  const confirmDel = await showCustomConfirm('¿Eliminar Semestre?', `¿Estás seguro de eliminar "${active.name}" y todos sus datos de materias, horario y faltas? Esta acción no se puede deshacer.`, { danger: true });
+  if(!confirmDel) return;
 
   rootData.semestres = rootData.semestres.filter(s => s.id !== active.id);
   rootData.activeSemesterId = rootData.semestres[0].id;
@@ -1328,6 +1507,80 @@ function deleteCurrentSemester(){
   updateActiveDataReference();
   saveData();
   render();
+}
+const deleteCurrentSemester = deleteActiveSemester;
+
+// ---------- Captura y Reversión de Seguridad (Safety Snapshot) ----------
+function createSafetyBackup(){
+  try {
+    const backupObj = {
+      timestamp: new Date().toISOString(),
+      rootData: JSON.parse(JSON.stringify(rootData))
+    };
+    localStorage.setItem('escuela-data-safety-backup', JSON.stringify(backupObj));
+  } catch(e){
+    console.warn('No se pudo crear la captura de seguridad:', e);
+  }
+}
+
+function getSafetyBackup(){
+  try {
+    const raw = localStorage.getItem('escuela-data-safety-backup');
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  return null;
+}
+
+function discardSafetyBackup(){
+  localStorage.removeItem('escuela-data-safety-backup');
+  renderSafetyBackupBanner();
+}
+
+async function undoRestoration(){
+  const snapshot = getSafetyBackup();
+  if(!snapshot || !snapshot.rootData){
+    await showCustomAlert('Sin Copia Previa', 'No se encontró ninguna copia previa para deshacer.', 'warning');
+    return;
+  }
+  const dateStr = snapshot.timestamp ? new Date(snapshot.timestamp).toLocaleString('es-MX') : '';
+  const confirmUndo = await showCustomConfirm(
+    '¿Deshacer Restauración?',
+    `¿Deseas revertir los cambios y volver al estado exacto que tenías guardado el ${dateStr}?`,
+    { confirmText: 'Sí, Revertir', danger: true }
+  );
+  if(!confirmUndo) return;
+
+  rootData = snapshot.rootData;
+  localStorage.removeItem('escuela-data-safety-backup');
+  updateActiveDataReference();
+  saveData();
+  render();
+  await showCustomAlert('Restauración Revertida', '🎉 Se ha restaurado tu información previa con éxito.', 'success');
+}
+
+function renderSafetyBackupBanner(){
+  const banner = document.getElementById('safety-backup-banner');
+  if(!banner) return;
+  const snapshot = getSafetyBackup();
+  if(!snapshot || !snapshot.rootData){
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+  const dateStr = snapshot.timestamp ? new Date(snapshot.timestamp).toLocaleString('es-MX') : 'recientemente';
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; color:var(--chalk);">🛡️ Punto de Restauración Guardado</div>
+        <div style="font-size:12px; color:var(--chalk-dim); margin-top:2px;">Creado el ${escapeHtml(dateStr)}. Puedes verificar tus horarios y revertir la importación si es necesario.</div>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button type="button" class="primary" onclick="undoRestoration()" style="font-size:11.5px; padding:5px 12px; cursor:pointer;">↩️ Deshacer Restauración</button>
+        <button type="button" class="ghost" onclick="discardSafetyBackup()" style="font-size:11.5px; padding:5px 8px; cursor:pointer;" title="Descartar copia previa">✕ Descartar</button>
+      </div>
+    </div>
+  `;
 }
 
 // ---------- Copia de Seguridad (Exportar / Importar) ----------
@@ -1349,7 +1602,7 @@ function exportBackupJson(){
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch(e){
-    alert('Error al exportar la copia de seguridad: ' + e.message);
+    showCustomAlert('Error al exportar', 'Error al exportar la copia de seguridad: ' + e.message, 'error');
   }
 }
 
@@ -1366,7 +1619,7 @@ function handleImportJson(inputEl){
   if(!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e){
+  reader.onload = async function(e){
     try{
       const parsed = JSON.parse(e.target.result);
       
@@ -1374,13 +1627,16 @@ function handleImportJson(inputEl){
       const isLegacyFormat = parsed && typeof parsed === 'object' && Array.isArray(parsed.materias) && Array.isArray(parsed.slots);
 
       if(!isRootFormat && !isLegacyFormat){
-        alert('⚠️ El archivo seleccionado no es compatible con la aplicación "Mi Semestre". Por favor selecciona un archivo JSON exportado previamente desde esta plataforma.');
+        await showCustomAlert('Archivo Incompatible', '⚠️ El archivo seleccionado no es compatible con la aplicación "Mi Semestre". Por favor selecciona un archivo JSON exportado previamente desde esta plataforma.', 'warning');
         return;
       }
 
-      if(!confirm('¿Deseas restaurar esta copia de seguridad? Se reemplazarán tus semestres y datos actuales por la información contenida en el archivo.')){
+      const confirmImport = await showCustomConfirm('Restaurar Copia de Seguridad', '¿Deseas restaurar esta copia de seguridad? Se reemplazarán tus semestres y datos actuales por la información contenida en el archivo.', { confirmText: 'Restaurar', danger: true });
+      if(!confirmImport){
         return;
       }
+
+      createSafetyBackup();
 
       if(isRootFormat){
         rootData = parsed;
@@ -1400,9 +1656,9 @@ function handleImportJson(inputEl){
       updateActiveDataReference();
       saveData();
       render();
-      alert('🎉 ¡Los datos del semestre se han importado y restaurado con éxito!');
+      await showCustomAlert('¡Restauración Exitosa!', '🎉 ¡Los datos del semestre se han importado y restaurado con éxito!', 'success');
     } catch(err){
-      alert('Error al leer el archivo. Asegúrate de seleccionar un archivo JSON válido exportado desde esta misma plataforma.');
+      await showCustomAlert('Error de Lectura', 'Error al leer el archivo. Asegúrate de seleccionar un archivo JSON válido exportado desde esta misma plataforma.', 'error');
     }
   };
   reader.readAsText(file);
@@ -1413,11 +1669,11 @@ function setCloudStatus(type, msg){
   const el = document.getElementById('cloud-status');
   if(!el) return;
   const styles = {
-    loading: `background:rgba(var(--amber-rgb),0.12); color:var(--amber); border:1px solid rgba(var(--amber-rgb),0.3);`,
-    success: 'background:rgba(127,166,135,0.15); color:#2c5435; border:1px solid rgba(127,166,135,0.4);',
-    error:   'background:rgba(214,96,60,0.12);  color:#8c3520; border:1px solid rgba(214,96,60,0.3);'
+    loading: 'background:rgba(var(--amber-rgb), 0.16); color:var(--chalk); border:1px solid var(--glass-border); border-left:4px solid var(--amber);',
+    success: 'background:rgba(79,157,143,0.18); color:var(--chalk); border:1px solid var(--glass-border); border-left:4px solid #4F9D8F;',
+    error:   'background:rgba(214,96,60,0.18); color:var(--chalk); border:1px solid var(--glass-border); border-left:4px solid #D6603C;'
   };
-  el.style.cssText = (styles[type] || '') + ' display:block; margin-top:14px; padding:10px 14px; border-radius:8px; font-size:12.5px; font-family:"IBM Plex Mono",monospace; line-height:1.5;';
+  el.style.cssText = (styles[type] || '') + ' display:block; margin-top:14px; padding:10px 14px; border-radius:8px; font-size:12.5px; font-family:"IBM Plex Mono",monospace; line-height:1.5; box-shadow:0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);';
   el.textContent = msg;
 }
 
@@ -1488,7 +1744,8 @@ async function pullFromCloud(){
     return;
   }
 
-  if(!confirm('¿Restaurar el backup desde la nube? Se reemplazarán los datos actuales con los del último backup guardado.')){
+  const confirmPull = await showCustomConfirm('Restaurar desde la Nube', '¿Restaurar el backup desde la nube? Se reemplazarán los datos actuales con los del último backup guardado.', { confirmText: 'Restaurar', danger: true });
+  if(!confirmPull){
     return;
   }
 
@@ -1522,6 +1779,8 @@ async function pullFromCloud(){
       setCloudStatus('error', '❌ El backup descargado tiene un formato inválido.');
       return;
     }
+
+    createSafetyBackup();
 
     if(isRootFormat){
       rootData = imported;
@@ -1842,7 +2101,7 @@ function onWeekNoteSubjectToggle(chkInput){
 function openWeekNoteModal(weekNum, noteId){
   const weeks = getSemesterWeeks();
   if(weeks.length === 0){
-    alert('Primero debes definir las fechas del curso en la pestaña Ajustes.');
+    showCustomAlert('Fechas Requeridas', 'Primero debes definir las fechas del curso en la pestaña Ajustes.', 'warning');
     return;
   }
 
@@ -1928,10 +2187,10 @@ function closeWeekNoteModal(){
   editingWeekNoteId = null;
 }
 
-function saveWeekNote(){
+async function saveWeekNote(){
   const text = document.getElementById('wn-text').value.trim();
   if(!text){
-    alert('Por favor escribe el contenido de la nota.');
+    await showCustomAlert('Campo requerido', 'Por favor escribe el contenido de la nota.', 'warning');
     return;
   }
   const weekNumber = parseInt(document.getElementById('wn-week-select').value);
@@ -1967,8 +2226,9 @@ function saveWeekNote(){
   render();
 }
 
-function deleteWeekNote(noteId){
-  if(!confirm('¿Eliminar esta nota de la semana?')) return;
+async function deleteWeekNote(noteId){
+  const confirmNote = await showCustomConfirm('¿Eliminar Nota?', '¿Estás seguro de eliminar esta nota de la semana?', { danger: true });
+  if(!confirmNote) return;
   data.weekNotes = (data.weekNotes || []).filter(n => n.id !== noteId);
   saveData();
   render();
@@ -2100,45 +2360,49 @@ function renderSettingsInputs(){
   }
 }
 
-function saveSettings(){
+async function saveSettings(){
   const startDate = document.getElementById('cfg-start-date').value;
   const endDate   = document.getElementById('cfg-end-date').value;
 
   if(startDate && endDate && endDate < startDate){
-    alert('La fecha de fin debe ser posterior a la fecha de inicio.');
+    await showCustomAlert('Fechas Inválidas', 'La fecha de fin debe ser posterior a la fecha de inicio.', 'warning');
     return;
   }
 
   data.config = Object.assign({}, data.config || {}, { startDate, endDate });
   saveData();
   render();
-  alert('¡Ajustes guardados correctamente!');
+  await showCustomAlert('Configuración Guardada', '¡Las fechas del curso han sido guardadas correctamente!', 'success');
 }
 
-function saveShiftConfig(){
+async function saveShiftConfig(){
   if(!data.config) data.config = {};
   if(!data.config.shiftConfig) data.config.shiftConfig = {};
 
   let valid = true;
-  ['vespertino','matutino','nocturno','completo'].forEach(key => {
+  for(const key of ['vespertino','matutino','nocturno','completo']){
     const startEl = document.getElementById(`shift-start-${key}`);
     const endEl   = document.getElementById(`shift-end-${key}`);
-    if(!startEl || !endEl) return;
+    if(!startEl || !endEl) continue;
     const s = parseInt(startEl.value);
     const e = parseInt(endEl.value);
     if(isNaN(s) || isNaN(e) || e <= s){
-      alert(`El horario de ${key} es inválido: la hora de fin debe ser mayor que la de inicio.`);
+      await showCustomAlert('Horario Inválido', `El horario de ${key} es inválido: la hora de fin debe ser mayor que la de inicio.`, 'warning');
       valid = false;
-      return;
+      break;
     }
-    if(e - s < 1){ alert(`El turno ${key} debe tener al menos 1 hora.`); valid = false; return; }
+    if(e - s < 1){
+      await showCustomAlert('Duración Insuficiente', `El turno ${key} debe tener al menos 1 hora de duración.`, 'warning');
+      valid = false;
+      break;
+    }
     data.config.shiftConfig[key] = { start: s, end: e };
-  });
+  }
 
   if(!valid) return;
   saveData();
   render();
-  alert('¡Horarios de turnos guardados correctamente!');
+  await showCustomAlert('Turnos Guardados', '¡Los horarios de turnos se han guardado correctamente!', 'success');
 }
 
 // ---------- Render ----------
@@ -2152,6 +2416,7 @@ function render(){
   renderSettingsInputs();
   renderThemeSwatches();
   renderAccentSwatches();
+  renderSafetyBackupBanner();
 
   const totalFaltas = (data.faltas || []).length;
   document.getElementById('stat-faltas').textContent = totalFaltas;
@@ -2174,7 +2439,7 @@ function renderGrid(){
   const shiftTotalMin = shiftEndMin - shiftStartMin;
 
   // 1. Day headers (Row 1)
-  const emptyHead = el('div','g-head','');
+  const emptyHead = el('div','g-head g-head-topleft','');
   emptyHead.style.gridColumn = '1';
   emptyHead.style.gridRow = '1';
   grid.appendChild(emptyHead);
@@ -2336,7 +2601,7 @@ function renderFaltas(){
       const hist = el('div','history','');
       registros.forEach(r=>{
         const chip = document.createElement('span');
-        chip.innerHTML = fmtDate(r.fecha)+' ';
+        chip.textContent = fmtDate(r.fecha) + ' ';
         const del = document.createElement('button');
         del.textContent = '✕';
         del.title = 'Eliminar falta';
@@ -2407,8 +2672,9 @@ function saveMateria(){
   render();
 }
 
-function deleteMateria(id){
-  if(!confirm('¿Seguro que deseas eliminar esta materia y sus datos asociados?')) return;
+async function deleteMateria(id){
+  const confirmMat = await showCustomConfirm('¿Eliminar Materia?', '¿Seguro que deseas eliminar esta materia y sus datos asociados? Esta acción borrará sus faltas y clases asignadas.', { danger: true });
+  if(!confirmMat) return;
   data.materias = data.materias.filter(m=>m.id!==id);
   data.slots = data.slots.filter(s=>s.materiaId!==id);
   data.faltas = data.faltas.filter(f=>f.materiaId!==id);
@@ -2503,21 +2769,22 @@ function closeSlotModal(){
   editingSlotId = null;
 }
 
-function deleteCurrentSlot(){
+async function deleteCurrentSlot(){
   if(!editingSlotId) return;
-  if(confirm('¿Seguro que deseas eliminar esta clase del horario?')){
+  const confirmSlot = await showCustomConfirm('¿Eliminar Clase?', '¿Seguro que deseas eliminar esta clase del horario?', { danger: true });
+  if(confirmSlot){
     removeSlot(editingSlotId);
     closeSlotModal();
   }
 }
 
-function saveSlot(){
+async function saveSlot(){
   const materiaId = document.getElementById('slot-materia').value;
   if(!materiaId) return;
 
   const checkedDays = Array.from(document.querySelectorAll('#slot-days-checkboxes input:checked')).map(cb => parseInt(cb.value));
   if(checkedDays.length === 0){
-    alert('Por favor selecciona al menos un día.');
+    await showCustomAlert('Días Requeridos', 'Por favor selecciona al menos un día de clase.', 'warning');
     return;
   }
 
@@ -2525,7 +2792,7 @@ function saveSlot(){
   const endVal = document.getElementById('slot-end-time').value;
 
   if(!startVal || !endVal){
-    alert('Por favor ingresa una hora de inicio y una hora de fin válidas.');
+    await showCustomAlert('Horario Incompleto', 'Por favor ingresa una hora de inicio y una hora de fin válidas.', 'warning');
     return;
   }
 
@@ -2533,13 +2800,13 @@ function saveSlot(){
   const endMin = parseToMinutes(endVal);
 
   if(endMin <= startMin){
-    alert('La hora de fin debe ser posterior a la hora de inicio.');
+    await showCustomAlert('Horario Inválido', 'La hora de fin debe ser posterior a la hora de inicio.', 'warning');
     return;
   }
 
   const durationMin = endMin - startMin;
   if(durationMin < 15){
-    alert('La duración mínima de una clase debe ser de 15 minutos.');
+    await showCustomAlert('Duración Muy Corta', 'La duración mínima de una clase debe ser de 15 minutos.', 'warning');
     return;
   }
 
