@@ -244,7 +244,15 @@
   .g-block:hover{ transform: scale(1.02); box-shadow: 0 6px 18px rgba(0,0,0,0.32); z-index: 10; }
   .g-block.compact{ padding: 3px 6px; justify-content: center; }
   .g-block.compact:hover{ min-height: 58px !important; transform: scale(1.04); z-index: 10; }
+
+  .g-block.short-60{ padding: 4px 6px !important; gap: 1px !important; }
+  .g-block.short-60 b{ font-size: 11px !important; line-height: 1.15 !important; margin-bottom: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-block.short-60 .g-profesor{ font-size: 9.5px !important; line-height: 1.1 !important; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-block.short-60 .g-aula{ font-size: 9px !important; line-height: 1.1 !important; opacity: 0.95; margin-top: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-block.short-60 .g-time-badge{ font-size: 8.5px !important; line-height: 1.1 !important; opacity: 0.9; margin-top: 1px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   .g-block b{ display:block; font-family:'Space Grotesk',sans-serif; font-size:12px; margin-bottom: 1px; }
+  .g-block .g-profesor{ font-size:11px; opacity:0.9; }
   .g-block .g-time-badge{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; opacity:0.9; margin-top:2px; }
   .g-block .g-aula{ font-size:10px; font-weight:600; opacity:0.95; margin-top:2px; }
 
@@ -1062,7 +1070,11 @@ function formatHour(h){
 
 function parseToMinutes(val){
   if(val === undefined || val === null || val === '') return NaN;
-  if(typeof val === 'number') return Math.round(val * 60);
+  if(typeof val === 'number'){
+    if(isNaN(val)) return NaN;
+    if(val > 24) return Math.round(val);
+    return Math.round(val * 60);
+  }
   if(typeof val === 'string'){
     const trimmed = val.trim();
     if(!trimmed) return NaN;
@@ -1078,7 +1090,10 @@ function parseToMinutes(val){
       return h * 60 + m;
     }
     const num = parseFloat(trimmed);
-    if(!isNaN(num)) return Math.round(num * 60);
+    if(!isNaN(num)){
+      if(num > 24) return Math.round(num);
+      return Math.round(num * 60);
+    }
   }
   return NaN;
 }
@@ -2497,10 +2512,11 @@ function renderGrid(){
       const topPct = ((clampedStartMin - shiftStartMin) / shiftTotalMin) * 100;
       const heightPct = ((clampedEndMin - clampedStartMin) / shiftTotalMin) * 100;
 
-      const isShort = durMin <= 35 || heightPct < 9;
+      const isShort = durMin <= 35 || heightPct < 6;
+      const isOneHour = !isShort && (durMin <= 65 || heightPct < 12);
 
       const block = document.createElement('div');
-      block.className = 'g-block' + (isShort ? ' compact' : '');
+      block.className = 'g-block' + (isShort ? ' compact' : (isOneHour ? ' short-60' : ''));
       block.style.position = 'absolute';
       block.style.top = `${topPct}%`;
       block.style.height = `max(${heightPct}%, 30px)`;
@@ -2527,7 +2543,7 @@ function renderGrid(){
         `;
       } else {
         content = `<b>${escapeHtml(mat.nombre)}</b>`;
-        if(mat.profesor) content += `<div style="font-size:11px;opacity:0.9;">${escapeHtml(mat.profesor)}</div>`;
+        if(mat.profesor) content += `<div class="g-profesor">${escapeHtml(mat.profesor)}</div>`;
         if(descText) content += `<div class="g-aula">📍 ${escapeHtml(descText)}</div>`;
         content += `<div class="g-time-badge">🕒 ${startStr} - ${endStr}</div>`;
       }
