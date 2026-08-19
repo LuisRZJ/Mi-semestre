@@ -61,10 +61,10 @@
       r.style.setProperty('--bg-deep',t.bgDeep);
       if(t.isLight){
         r.style.setProperty('--chalk','#111827');
-        r.style.setProperty('--chalk-dim','rgba(17, 24, 39, 0.65)');
+        r.style.setProperty('--chalk-dim','rgba(17, 24, 39, 0.72)');
         r.style.setProperty('--rule','rgba(17, 24, 39, 0.15)');
         r.style.setProperty('--ink','#111827');
-        r.style.setProperty('--ink-dim','rgba(17, 24, 39, 0.6)');
+        r.style.setProperty('--ink-dim','rgba(17, 24, 39, 0.65)');
         r.style.setProperty('--glass','rgba(255, 255, 255, 0.65)');
         r.style.setProperty('--glass-border','rgba(0, 0, 0, 0.12)');
         r.style.setProperty('--glass-hover','rgba(255, 255, 255, 0.85)');
@@ -72,6 +72,12 @@
         r.style.setProperty('--select-bg','rgba(255, 255, 255, 0.85)');
         r.style.setProperty('--option-bg','#F3F4F6');
         r.style.setProperty('--option-color','#111827');
+        r.style.setProperty('--modal-bg', 'rgba(255, 255, 255, 0.96)');
+        r.style.setProperty('--modal-border', 'rgba(0, 0, 0, 0.14)');
+        r.style.setProperty('--modal-overlay', 'rgba(0, 0, 0, 0.4)');
+        r.style.setProperty('--input-bg', 'rgba(0, 0, 0, 0.04)');
+        r.style.setProperty('--input-border', 'rgba(0, 0, 0, 0.16)');
+        r.style.setProperty('--input-focus-bg', '#FFFFFF');
       }
       r.style.setProperty('--amber',a.hex);
       r.style.setProperty('--amber-rgb',a.rgb);
@@ -98,6 +104,12 @@
     --glass: rgba(255,255,255,0.06);
     --glass-border: rgba(255,255,255,0.12);
     --glass-hover: rgba(255,255,255,0.1);
+    --modal-bg: rgba(255, 255, 255, 0.08);
+    --modal-border: rgba(255, 255, 255, 0.16);
+    --modal-overlay: rgba(0, 0, 0, 0.55);
+    --input-bg: rgba(255, 255, 255, 0.07);
+    --input-border: rgba(255, 255, 255, 0.15);
+    --input-focus-bg: rgba(255, 255, 255, 0.1);
     --dots-color: rgba(244,241,230,0.05);
     --amber: #E8A33D;
     --amber-rgb: 232,163,61;
@@ -162,6 +174,37 @@
   }
   .stat .num{ font-size: 22px; color: var(--amber); font-weight:600; }
   .stat .lbl{ font-size: 11px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: .06em; }
+  .stat.interactive{
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease;
+  }
+  .stat.interactive:hover .num{
+    filter: brightness(1.18);
+  }
+  .stat.interactive:active{
+    transform: scale(0.96);
+  }
+  #btn-toggle-hours-metric{
+    background: none;
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    color: var(--chalk-dim);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 5px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  #btn-toggle-hours-metric:hover{
+    color: var(--amber);
+    border-color: var(--amber);
+    background: rgba(var(--amber-rgb), 0.12);
+    transform: scale(1.1);
+  }
 
   nav.tabs{ display:flex; gap: 6px; margin-bottom: 22px; }
   nav.tabs button{
@@ -217,6 +260,13 @@
     position: sticky; top: 0; z-index: 15;
     background: var(--bg);
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .g-head.today{
+    color: var(--amber);
+    font-weight: 700;
+    background: rgba(var(--amber-rgb), 0.12);
+    box-shadow: inset 0 -2px 0 var(--amber);
   }
   .g-head.g-head-topleft{
     position: sticky; top: 0; left: 0; z-index: 25;
@@ -231,6 +281,41 @@
   }
   .g-cell{ position:relative; min-height: 64px; cursor:pointer; }
   .g-cell:hover{ background: rgba(232,163,61,0.12); }
+  .g-cell.today{
+    background: rgba(var(--amber-rgb), 0.04);
+  }
+  .g-cell.today:hover{
+    background: rgba(var(--amber-rgb), 0.14);
+  }
+  
+  /* Indicador de hora actual en tiempo real */
+  .current-time-indicator{
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 12;
+    pointer-events: none;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+  }
+  .current-time-line{
+    width: 100%;
+    height: 2px;
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(var(--amber-rgb), 0.8), 0 0 2px var(--amber);
+  }
+  .current-time-dot{
+    position: absolute;
+    left: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px var(--amber), 0 0 2px #fff;
+    flex-shrink: 0;
+  }
   
   .g-block{
     margin: 1px 2px; border-radius: 6px; padding: 6px 8px;
@@ -371,41 +456,41 @@
 
   /* ---- modal ---- */
   .overlay{
-    position:fixed; inset:0; background: rgba(0,0,0,0.55); display:none;
+    position:fixed; inset:0; background: var(--modal-overlay, rgba(0,0,0,0.55)); display:none;
     align-items:center; justify-content:center; padding: 20px; z-index: 50;
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
   }
   .overlay.active{ display:flex; }
   .modal{
-    background: rgba(255,255,255,0.08);
+    background: var(--modal-bg, rgba(255,255,255,0.08));
     -webkit-backdrop-filter: blur(32px) saturate(1.6);
     backdrop-filter: blur(32px) saturate(1.6);
-    border: 1px solid rgba(255,255,255,0.16);
+    border: 1px solid var(--modal-border, rgba(255,255,255,0.16));
     color: var(--chalk); border-radius: 16px; padding: 22px;
     width: 100%; max-width: 420px; max-height: 88vh; overflow-y:auto;
-    box-shadow: 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.35), 0 4px 14px rgba(0,0,0,0.1);
   }
   .modal h2{ font-family:'Space Grotesk',sans-serif; margin: 0 0 16px; font-size:18px; color: var(--chalk); }
   .field{ margin-bottom: 14px; }
   .field label, .field-label{ display:block; font-size: 12px; font-weight:600; margin-bottom:5px; color: var(--ink-dim); text-transform:uppercase; letter-spacing:.04em; }
-  .field input, .field select{
+  .field input, .field select, .field textarea{
     width:100%; padding: 9px 10px; border-radius:7px;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.07);
+    border: 1px solid var(--input-border, rgba(255,255,255,0.15));
+    background: var(--input-bg, rgba(255,255,255,0.07));
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     font-family:'IBM Plex Sans',sans-serif; font-size: 14px; color: var(--chalk);
     outline: none;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .field input:focus, .field select:focus{
+  .field input:focus, .field select:focus, .field textarea:focus{
     border-color: var(--amber);
-    background: rgba(255,255,255,0.1);
+    background: var(--input-focus-bg, rgba(255,255,255,0.1));
   }
-  .field input::placeholder{ color: var(--ink-dim); }
+  .field input::placeholder, .field textarea::placeholder{ color: var(--ink-dim); }
   .field input[readonly], .field input[disabled], input[readonly], input[disabled]{
-    background: rgba(0,0,0,0.2) !important;
+    background: rgba(0,0,0,0.12) !important;
     color: var(--chalk) !important;
     border: 1px dashed var(--glass-border) !important;
     cursor: not-allowed !important;
@@ -418,8 +503,8 @@
   .day-chip{
     display:inline-flex; align-items:center; justify-content:center;
     padding: 7px 12px; border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.06); cursor: pointer; font-size: 13px; font-family:'Space Grotesk', sans-serif;
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.15));
+    background: var(--glass, rgba(255,255,255,0.06)); cursor: pointer; font-size: 13px; font-family:'Space Grotesk', sans-serif;
     font-weight: 600; color: var(--chalk);
     -webkit-user-select: none;
     user-select: none; transition: all 0.15s ease;
@@ -430,7 +515,7 @@
   .colorrow{ display:flex; gap:8px; flex-wrap:wrap; }
   .swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; border: 2px solid transparent; transition: transform 0.15s ease; }
   .swatch:hover{ transform: scale(1.1); }
-  .swatch.sel{ border-color: rgba(255,255,255,0.8); transform: scale(1.15); }
+  .swatch.sel{ border-color: var(--chalk, rgba(255,255,255,0.8)); transform: scale(1.15); }
   .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top: 18px; }
   .empty{ color: var(--chalk-dim); font-family:'IBM Plex Mono', monospace; font-size: 13px; padding: 30px 4px; text-align:center; }
   /* ---- Selects: estilo dinámico según tema ---- */
@@ -499,9 +584,12 @@
       <div class="sub" id="today-label">—</div>
     </div>
     <div style="display:flex; gap:20px; align-items:center;">
-      <div class="stat">
-        <div class="num" id="stat-horas">0h</div>
-        <div class="lbl">Horas / semana</div>
+      <div class="stat interactive" id="stat-horas-container" onclick="toggleHoursMetric(event)" title="Haz clic para alternar métrica de tiempo">
+        <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px;">
+          <div class="num" id="stat-horas">0h</div>
+          <button type="button" id="btn-toggle-hours-metric" onclick="toggleHoursMetric(event)" title="Alternar modo de cálculo (Semanal, Exacto, Semestre, Promedio, Descanso)">⇄</button>
+        </div>
+        <div class="lbl" id="stat-horas-lbl">Horas / semana</div>
       </div>
       <div class="stat">
         <div class="num" id="stat-faltas">0</div>
@@ -1212,10 +1300,10 @@ function applyTheme(themeId){
 
   if(theme.isLight){
     root.style.setProperty('--chalk', '#111827');
-    root.style.setProperty('--chalk-dim', 'rgba(17, 24, 39, 0.65)');
+    root.style.setProperty('--chalk-dim', 'rgba(17, 24, 39, 0.72)');
     root.style.setProperty('--rule', 'rgba(17, 24, 39, 0.15)');
     root.style.setProperty('--ink', '#111827');
-    root.style.setProperty('--ink-dim', 'rgba(17, 24, 39, 0.6)');
+    root.style.setProperty('--ink-dim', 'rgba(17, 24, 39, 0.65)');
     root.style.setProperty('--glass', 'rgba(255, 255, 255, 0.65)');
     root.style.setProperty('--glass-border', 'rgba(0, 0, 0, 0.12)');
     root.style.setProperty('--glass-hover', 'rgba(255, 255, 255, 0.85)');
@@ -1224,6 +1312,12 @@ function applyTheme(themeId){
     root.style.setProperty('--option-bg', '#F3F4F6');
     root.style.setProperty('--option-color', '#111827');
     root.style.setProperty('--option-checked-bg', '#E5E7EB');
+    root.style.setProperty('--modal-bg', 'rgba(255, 255, 255, 0.96)');
+    root.style.setProperty('--modal-border', 'rgba(0, 0, 0, 0.14)');
+    root.style.setProperty('--modal-overlay', 'rgba(0, 0, 0, 0.4)');
+    root.style.setProperty('--input-bg', 'rgba(0, 0, 0, 0.04)');
+    root.style.setProperty('--input-border', 'rgba(0, 0, 0, 0.16)');
+    root.style.setProperty('--input-focus-bg', '#FFFFFF');
   } else {
     root.style.setProperty('--chalk', '#F4F1E6');
     root.style.setProperty('--chalk-dim', 'rgba(244,241,230,0.55)');
@@ -1238,6 +1332,12 @@ function applyTheme(themeId){
     root.style.setProperty('--option-bg', '#1a2e1e');
     root.style.setProperty('--option-color', '#F4F1E6');
     root.style.setProperty('--option-checked-bg', '#2e4a30');
+    root.style.setProperty('--modal-bg', 'rgba(255, 255, 255, 0.08)');
+    root.style.setProperty('--modal-border', 'rgba(255, 255, 255, 0.16)');
+    root.style.setProperty('--modal-overlay', 'rgba(0, 0, 0, 0.55)');
+    root.style.setProperty('--input-bg', 'rgba(255, 255, 255, 0.07)');
+    root.style.setProperty('--input-border', 'rgba(255, 255, 255, 0.15)');
+    root.style.setProperty('--input-focus-bg', 'rgba(255, 255, 255, 0.1)');
   }
 
   let metaTC = document.querySelector('meta[name="theme-color"]');
@@ -1898,17 +1998,135 @@ if(ovSem){
   });
 }
 
-function calculateTotalHours(){
+const HOURS_METRIC_MODES = ['weekly', 'exact', 'semester', 'daily', 'rest'];
+
+function getHoursMetricInfo(mode){
+  if(!mode || !HOURS_METRIC_MODES.includes(mode)){
+    mode = 'weekly';
+  }
+
+  // Suma de minutos totales por semana y conjunto de días con clase
   let totalMin = 0;
+  const schoolDaysSet = new Set();
   (data.slots || []).forEach(s => {
     const sMin = getSlotStartMinutes(s);
     const eMin = getSlotEndMinutes(s);
     if(eMin > sMin){
       totalMin += (eMin - sMin);
+      schoolDaysSet.add(s.day);
     }
   });
-  const hours = totalMin / 60;
-  return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
+
+  const totalHours = totalMin / 60;
+  const weeks = getSemesterWeeks();
+  const totalWeeks = weeks.length;
+  const cfg = data.config || {};
+  const hasDates = !!(cfg.startDate && cfg.endDate);
+
+  switch(mode){
+    case 'weekly': {
+      const val = Number.isInteger(totalHours) ? `${totalHours}h` : `${totalHours.toFixed(1)}h`;
+      return {
+        value: val,
+        label: 'Horas / semana',
+        title: 'Horas semanales (formato decimal). Haz clic o presiona ⇄ para alternar métrica'
+      };
+    }
+    case 'exact': {
+      const h = Math.floor(totalMin / 60);
+      const m = Math.round(totalMin % 60);
+      const val = (h === 0 && m === 0) ? '0h' : (h > 0 && m > 0) ? `${h}h ${m}m` : (h > 0) ? `${h}h` : `${m}m`;
+      return {
+        value: val,
+        label: 'Tiempo exacto / sem.',
+        title: 'Suma exacta en horas y minutos por semana. Haz clic o presiona ⇄ para alternar métrica'
+      };
+    }
+    case 'semester': {
+      if(!hasDates || totalWeeks === 0){
+        return {
+          value: 'N/D',
+          label: 'Horas en el semestre',
+          title: 'Configura las fechas del curso en Ajustes para calcular las horas totales del semestre'
+        };
+      }
+      const semHours = Math.round(totalHours * totalWeeks * 10) / 10;
+      const val = Number.isInteger(semHours) ? `${semHours}h` : `${semHours.toFixed(1)}h`;
+      return {
+        value: val,
+        label: 'Horas en el semestre',
+        title: `Total acumulado en las ${totalWeeks} semanas del curso. Haz clic o presiona ⇄ para alternar métrica`
+      };
+    }
+    case 'daily': {
+      const activeDaysCount = schoolDaysSet.size || 1;
+      const dailyHours = totalHours / activeDaysCount;
+      const val = Number.isInteger(dailyHours) ? `${dailyHours}h` : `${dailyHours.toFixed(1)}h`;
+      return {
+        value: val,
+        label: 'Promedio / día de clase',
+        title: `Promedio diario entre los ${schoolDaysSet.size} días con clase a la semana. Haz clic o presiona ⇄ para alternar métrica`
+      };
+    }
+    case 'rest': {
+      if(!hasDates || totalWeeks === 0){
+        return {
+          value: 'N/D',
+          label: '% Tiempo de descanso',
+          title: 'Configura las fechas del curso en Ajustes para calcular el porcentaje de descanso'
+        };
+      }
+      // Cálculo considerando todo día con clase como día de escuela y los demás como días de descanso
+      const start = new Date(cfg.startDate + 'T00:00:00');
+      const end = new Date(cfg.endDate + 'T00:00:00');
+      const totalMs = end.getTime() - start.getTime();
+      const totalDays = Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)) + 1);
+
+      let restDaysCount = 0;
+      for(let i = 0; i < totalDays; i++){
+        const curr = new Date(start.getTime() + (i * 24 * 60 * 60 * 1000));
+        const dayOfWeek = curr.getDay(); // 0: Dom, 1: Lun, ..., 6: Sáb
+        const gridDayIdx = (dayOfWeek >= 1 && dayOfWeek <= 5) ? (dayOfWeek - 1) : -1;
+        // Si es fin de semana o es un día entre semana sin clases asignadas, es día de descanso
+        if(gridDayIdx === -1 || !schoolDaysSet.has(gridDayIdx)){
+          restDaysCount++;
+        }
+      }
+      const restPct = Math.round((restDaysCount / totalDays) * 100);
+      return {
+        value: `${restPct}%`,
+        label: '% Tiempo de descanso',
+        title: `${restDaysCount} días de descanso de ${totalDays} días totales del curso (${100 - restPct}% días con clase)`
+      };
+    }
+    default:
+      return getHoursMetricInfo('weekly');
+  }
+}
+
+function renderHoursMetric(){
+  const mode = (rootData && rootData.hoursMetricMode) || 'weekly';
+  const info = getHoursMetricInfo(mode);
+  const numEl = document.getElementById('stat-horas');
+  const lblEl = document.getElementById('stat-horas-lbl');
+  const container = document.getElementById('stat-horas-container');
+  if(numEl) numEl.textContent = info.value;
+  if(lblEl) lblEl.textContent = info.label;
+  if(container) container.title = info.title;
+}
+
+function toggleHoursMetric(e){
+  if(e) e.stopPropagation();
+  const currentMode = (rootData && rootData.hoursMetricMode) || 'weekly';
+  const nextIdx = (HOURS_METRIC_MODES.indexOf(currentMode) + 1) % HOURS_METRIC_MODES.length;
+  if(!rootData) rootData = {};
+  rootData.hoursMetricMode = HOURS_METRIC_MODES[nextIdx];
+  saveData();
+  renderHoursMetric();
+}
+
+function calculateTotalHours(){
+  return getHoursMetricInfo('weekly').value;
 }
 
 function getSemesterWeeks(){
@@ -2436,8 +2654,7 @@ function render(){
   const totalFaltas = (data.faltas || []).length;
   document.getElementById('stat-faltas').textContent = totalFaltas;
 
-  const totalHoras = calculateTotalHours();
-  document.getElementById('stat-horas').textContent = totalHoras;
+  renderHoursMetric();
 }
 
 function renderGrid(){
@@ -2453,6 +2670,12 @@ function renderGrid(){
   const shiftEndMin = (hours[hours.length - 1] + 1) * 60;
   const shiftTotalMin = shiftEndMin - shiftStartMin;
 
+  // Detección del día actual (0 = Domingo, 1 = Lunes, ..., 5 = Viernes, 6 = Sábado)
+  const todayDay = new Date().getDay();
+  const currentDayIndex = (todayDay >= 1 && todayDay <= 5) ? (todayDay - 1) : -1;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
   // 1. Day headers (Row 1)
   const emptyHead = el('div','g-head g-head-topleft','');
   emptyHead.style.gridColumn = '1';
@@ -2460,7 +2683,8 @@ function renderGrid(){
   grid.appendChild(emptyHead);
 
   DAYS.forEach((d, dIdx) => {
-    const head = el('div','g-head', d);
+    const isToday = dIdx === currentDayIndex;
+    const head = el('div','g-head' + (isToday ? ' today' : ''), d);
     head.style.gridColumn = (dIdx + 2).toString();
     head.style.gridRow = '1';
     grid.appendChild(head);
@@ -2476,7 +2700,8 @@ function renderGrid(){
     grid.appendChild(timeLabel);
 
     DAYS.forEach((d, dIdx) => {
-      const cell = el('div','g-cell','');
+      const isToday = dIdx === currentDayIndex;
+      const cell = el('div','g-cell' + (isToday ? ' today' : ''),'');
       cell.style.gridColumn = (dIdx + 2).toString();
       cell.style.gridRow = rIdx.toString();
       cell.addEventListener('click', () => openSlotModal(dIdx, h));
@@ -2486,13 +2711,28 @@ function renderGrid(){
 
   // 3. Day Column Overlays for precise minute-positioned class blocks
   DAYS.forEach((d, dIdx) => {
+    const isToday = dIdx === currentDayIndex;
     const dayCol = document.createElement('div');
-    dayCol.className = 'g-day-col';
+    dayCol.className = 'g-day-col' + (isToday ? ' today' : '');
     dayCol.style.gridColumn = (dIdx + 2).toString();
     dayCol.style.gridRow = `2 / span ${totalRows}`;
     dayCol.style.position = 'relative';
     dayCol.style.pointerEvents = 'none';
     grid.appendChild(dayCol);
+
+    // Barra indicadora de hora actual en tiempo real si cae dentro del turno activo
+    if (isToday && currentMinutes >= shiftStartMin && currentMinutes <= shiftEndMin) {
+      const timePct = ((currentMinutes - shiftStartMin) / shiftTotalMin) * 100;
+      const indicator = document.createElement('div');
+      indicator.className = 'current-time-indicator';
+      indicator.style.top = `${timePct}%`;
+      indicator.title = `Hora actual: ${now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+      indicator.innerHTML = `
+        <div class="current-time-dot"></div>
+        <div class="current-time-line"></div>
+      `;
+      dayCol.appendChild(indicator);
+    }
 
     const daySlots = (data.slots || []).filter(s => s.day === dIdx);
 
@@ -2955,6 +3195,16 @@ window.addEventListener('appinstalled', () => {
 });
 
 loadData();
+
+// Actualización automática de la barra de tiempo actual cada 60 segundos
+if (!window._timeIndicatorInterval) {
+  window._timeIndicatorInterval = setInterval(() => {
+    const schedulePanel = document.getElementById('panel-horario');
+    if (schedulePanel && schedulePanel.classList.contains('active')) {
+      renderGrid();
+    }
+  }, 60000);
+}
 </script>
 </body>
 </html>
