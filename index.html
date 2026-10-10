@@ -947,6 +947,33 @@
   </div>
 </div>
 
+<!-- Modal: Registrar / Editar Inasistencia con Fecha Histórica -->
+<div class="overlay" id="overlay-falta" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:380px;">
+    <h2 id="falta-modal-title">Registrar Inasistencia</h2>
+    <div id="falta-materia-info" style="display:flex; align-items:center; gap:8px; margin-bottom:14px; font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;">
+      <div id="falta-materia-dot" style="width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+      <span id="falta-materia-name" style="color:var(--chalk);"></span>
+    </div>
+    <div class="field">
+      <label for="falta-fecha-input">Fecha de la inasistencia</label>
+      <input type="date" id="falta-fecha-input" style="font-family:'IBM Plex Mono',monospace; cursor:pointer;" required>
+    </div>
+    <div style="display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;">
+      <button type="button" class="ghost" style="font-size:11.5px; padding:4px 10px;" onclick="setFaltaDatePreset(0)">Hoy</button>
+      <button type="button" class="ghost" style="font-size:11.5px; padding:4px 10px;" onclick="setFaltaDatePreset(-1)">Ayer</button>
+      <button type="button" class="ghost" style="font-size:11.5px; padding:4px 10px;" onclick="setFaltaDatePreset(-7)">Hace 1 semana</button>
+    </div>
+    <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="ghost danger" id="btn-delete-falta-modal" type="button" style="display:none;" onclick="deleteFaltaFromModal()">Eliminar</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="ghost" type="button" onclick="closeFaltaModal()">Cancelar</button>
+        <button class="primary" type="button" onclick="saveFaltaModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Genérico para Alertas y Confirmaciones -->
 <div class="overlay" id="overlay-custom-dialog" style="z-index: 10000;" role="dialog" aria-modal="true">
   <div class="modal custom-dialog-card" style="max-width:390px; text-align:center; padding:24px 22px;">
@@ -1971,6 +1998,7 @@ document.addEventListener('keydown', (e)=>{
     closeSlotModal();
     closeWeekNoteModal();
     closeSemesterModal();
+    closeFaltaModal();
   }
 });
 const ovMat = document.getElementById('overlay-materia');
@@ -1995,6 +2023,21 @@ const ovSem = document.getElementById('overlay-semester');
 if(ovSem){
   ovSem.addEventListener('click', (e)=>{
     if(e.target.id === 'overlay-semester') closeSemesterModal();
+  });
+}
+const ovFalta = document.getElementById('overlay-falta');
+if(ovFalta){
+  ovFalta.addEventListener('click', (e)=>{
+    if(e.target.id === 'overlay-falta') closeFaltaModal();
+  });
+}
+const faltaInp = document.getElementById('falta-fecha-input');
+if(faltaInp){
+  faltaInp.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      saveFaltaModal();
+    }
   });
 }
 
@@ -2851,17 +2894,27 @@ function renderFaltas(){
     const count = el('div','count', registros.length+' / '+m.limite+' faltas');
     row.appendChild(count);
     const addBtn = el('button','ghost','+ Registrar falta');
-    addBtn.addEventListener('click', ()=> registrarFalta(m.id));
+    addBtn.title = 'Registrar inasistencia con fecha actual o histórica';
+    addBtn.addEventListener('click', ()=> openFaltaModal(m.id));
     row.appendChild(addBtn);
     if(registros.length){
       const hist = el('div','history','');
       registros.forEach(r=>{
         const chip = document.createElement('span');
         chip.textContent = fmtDate(r.fecha) + ' ';
+        chip.title = `Inasistencia del ${r.fecha} (Haz clic para editar la fecha)`;
+        chip.style.cursor = 'pointer';
+        chip.addEventListener('click', (e)=>{
+          if(e.target.tagName.toLowerCase() === 'button') return;
+          openFaltaModal(m.id, r.id);
+        });
         const del = document.createElement('button');
         del.textContent = '✕';
         del.title = 'Eliminar falta';
-        del.addEventListener('click', ()=> deleteFalta(r.id));
+        del.addEventListener('click', (e)=> {
+          e.stopPropagation();
+          deleteFalta(r.id);
+        });
         chip.appendChild(del);
         hist.appendChild(chip);
       });
@@ -3124,13 +3177,97 @@ function removeSlot(slotId){
   render();
 }
 
-// ---------- Faltas ----------
-function registrarFalta(materiaId){
-  const fecha = new Date().toISOString().slice(0,10);
+// ---------- Faltas con Fechas Históricas ----------
+let editingFaltaId = null;
+let currentFaltaMateriaId = null;
+
+function getLocalDateString(date = new Date()){
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function setFaltaDatePreset(dayOffset){
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  const inp = document.getElementById('falta-fecha-input');
+  if(inp) inp.value = getLocalDateString(d);
+}
+
+function openFaltaModal(materiaId, faltaId = null){
+  editingFaltaId = faltaId;
+  currentFaltaMateriaId = materiaId;
+  const mat = data.materias.find(m => m.id === materiaId);
+  if(!mat) return;
+
+  const modalTitle = document.getElementById('falta-modal-title');
+  const matDot = document.getElementById('falta-materia-dot');
+  const matName = document.getElementById('falta-materia-name');
+  const dateInput = document.getElementById('falta-fecha-input');
+  const delBtn = document.getElementById('btn-delete-falta-modal');
+
+  if(matDot) matDot.style.background = mat.color;
+  if(matName) matName.textContent = mat.nombre;
+
+  if(faltaId){
+    const falta = data.faltas.find(f => f.id === faltaId);
+    if(modalTitle) modalTitle.textContent = 'Editar Inasistencia';
+    if(dateInput) dateInput.value = falta ? falta.fecha : getLocalDateString();
+    if(delBtn) delBtn.style.display = 'inline-flex';
+  } else {
+    if(modalTitle) modalTitle.textContent = 'Registrar Inasistencia';
+    if(dateInput) dateInput.value = getLocalDateString();
+    if(delBtn) delBtn.style.display = 'none';
+  }
+
+  document.getElementById('overlay-falta').classList.add('active');
+  setTimeout(() => {
+    if(dateInput) dateInput.focus();
+  }, 50);
+}
+
+function closeFaltaModal(){
+  const ov = document.getElementById('overlay-falta');
+  if(ov) ov.classList.remove('active');
+  editingFaltaId = null;
+  currentFaltaMateriaId = null;
+}
+
+function saveFaltaModal(){
+  const dateInput = document.getElementById('falta-fecha-input');
+  const fecha = dateInput ? dateInput.value : '';
+  if(!fecha){
+    showCustomAlert('Fecha Requerida', 'Por favor selecciona o introduce una fecha válida para la inasistencia.', 'warning');
+    return;
+  }
+
+  if(editingFaltaId){
+    const f = data.faltas.find(x => x.id === editingFaltaId);
+    if(f) f.fecha = fecha;
+  } else {
+    data.faltas.push({ id: uid(), materiaId: currentFaltaMateriaId, fecha });
+  }
+
+  saveData();
+  closeFaltaModal();
+  render();
+}
+
+function deleteFaltaFromModal(){
+  if(editingFaltaId){
+    deleteFalta(editingFaltaId);
+    closeFaltaModal();
+  }
+}
+
+function registrarFalta(materiaId, customDate = null){
+  const fecha = customDate || getLocalDateString();
   data.faltas.push({ id: uid(), materiaId, fecha });
   saveData();
   render();
 }
+
 function deleteFalta(id){
   data.faltas = data.faltas.filter(f=>f.id!==id);
   saveData();
@@ -3148,7 +3285,12 @@ function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function fmtDate(iso){
+  if(!iso) return '';
   const d = new Date(iso+'T00:00:00');
+  const nowYear = new Date().getFullYear();
+  if(d.getFullYear() !== nowYear){
+    return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+  }
   return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
 }
 
