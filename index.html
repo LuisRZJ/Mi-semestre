@@ -782,7 +782,17 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
         <button class="primary" type="button" onclick="pushToCloud()" id="btn-cloud-push" style="font-size:12.5px;">☁️ Subir a la Nube</button>
         <button class="ghost" type="button" onclick="pullFromCloud()" id="btn-cloud-pull" style="font-size:12.5px;">⬇️ Restaurar desde la Nube</button>
+        <button class="ghost" type="button" onclick="checkCloudUpdate(true)" id="btn-cloud-check" style="font-size:12.5px;">🔍 Buscar actualizaciones</button>
       </div>
+
+      <label style="display:flex; align-items:flex-start; gap:10px; margin-top:16px; cursor:pointer; font-size:13px; color:var(--ink);">
+        <input type="checkbox" id="cloud-autosync" onchange="toggleAutoSync(this.checked)" style="margin-top:3px; accent-color:var(--amber);">
+        <span>
+          <b>Respaldo automático</b><br>
+          <span style="font-size:12px; color:var(--ink-dim);">Sube tus datos 4 segundos después de cada cambio. Guarda la contraseña en este dispositivo mientras esté activo.</span>
+        </span>
+      </label>
+      <div id="auto-sync-indicator" style="margin-top:8px; font-size:12px; font-family:'IBM Plex Mono',monospace; color:var(--ink-dim); min-height:16px;"></div>
 
       <div id="cloud-status" style="display:none; margin-top:14px; padding:10px 14px; border-radius:8px; font-size:12.5px; font-family:'IBM Plex Mono',monospace; line-height:1.5;"></div>
 
@@ -1566,12 +1576,14 @@ function hideAppLoader(){
   }
 }
 
-function saveData(){
+function saveData(skipStamp){
   try{
     const active = getActiveSemester();
     active.data = data;
+    if(!skipStamp) rootData.modifiedAt = Date.now();
     const json = JSON.stringify(rootData);
     localStorage.setItem('escuela-data', json);
+    if(!skipStamp) scheduleAutoCloudPush();
   }catch(e){
     console.error('No se pudo guardar:', e);
   }
@@ -1839,44 +1851,142 @@ function toggleCloudPasswordVisibility(){
   }
 }
 
+// ----- Sincronización: marca de tiempo local vs. nube -----
+// rootData.modifiedAt = momento de la última modificación local (ms).
+// meta.syncedStamp    = modifiedAt de la versión con la que este dispositivo se sincronizó por última vez.
+// Si la nube trae un modifiedAt mayor que syncedStamp, existe una versión más reciente.
+const CLOUD_META_KEY = 'escuela-cloud-meta';
+const AUTO_SYNC_DELAY_MS = 4000;
+let cloudBusy = false;
+let autoPushTimer = null;
+let cloudPromptedStamp = null;
+let lastCloudCheckAt = 0;
+
+function getCloudMeta(){
+  try{ return JSON.parse(localStorage.getItem(CLOUD_META_KEY)) || {}; }catch(e){ return {}; }
+}
+function setCloudMeta(patch){
+  try{ localStorage.setItem(CLOUD_META_KEY, JSON.stringify(Object.assign(getCloudMeta(), patch))); }catch(e){}
+}
+function getCloudStamp(d){
+  return (d && typeof d.modifiedAt === 'number') ? d.modifiedAt : 0;
+}
+function getCloudPassword(){
+  return (document.getElementById('cloud-password')?.value || '').trim() || getCloudMeta().password || '';
+}
+
+async function cloudFetch(password){
+  const res = await fetch('/api/backup-pull', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  });
+  let json = {};
+  try{ json = await res.json(); }catch(e){}
+  return { res, json };
+}
+
+function cloudErrorMessage(res, json){
+  if(res.status === 401) return '❌ Contraseña incorrecta. Verifica la contraseña de backup.';
+  if(res.status === 404) return '☁️ No se encontró ningún backup en la nube. Sube uno primero.';
+  if(res.status === 429) return `⏳ ${json.error || 'Demasiados intentos. Espera un momento.'}`;
+  return `❌ ${json.error || 'Error desconocido.'}`;
+}
+
+// Sube rootData. Antes verifica que la nube no tenga cambios más recientes sin restaurar.
+// Devuelve { status: 'ok' | 'conflict' | 'error', ... }
+async function cloudPushCore(password, opts = {}){
+  const check = await cloudFetch(password);
+  if(check.res.ok){
+    const cloudStamp = getCloudStamp(check.json.data);
+    if(!opts.force && cloudStamp > (getCloudMeta().syncedStamp || 0)){
+      return { status: 'conflict', cloudStamp };
+    }
+  } else if(check.res.status !== 404){
+    return { status: 'error', res: check.res, json: check.json };
+  }
+
+  const active = getActiveSemester();
+  active.data = data;
+  if(!rootData.modifiedAt) rootData.modifiedAt = Date.now();
+  const sentStamp = rootData.modifiedAt;
+
+  const res = await fetch('/api/backup-push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password, data: rootData })
+  });
+  let json = {};
+  try{ json = await res.json(); }catch(e){}
+  if(!res.ok) return { status: 'error', res, json };
+
+  setCloudMeta({ syncedStamp: sentStamp, lastSyncAt: Date.now() });
+  saveData(true);
+  return { status: 'ok', date: json.date };
+}
+
 async function pushToCloud(){
   const password = (document.getElementById('cloud-password')?.value || '').trim();
   if(!password){
     setCloudStatus('error', '⚠️ Ingresa la contraseña de backup antes de subir.');
     return;
   }
+  if(cloudBusy) return;
 
+  cloudBusy = true;
+  clearTimeout(autoPushTimer);
   setCloudStatus('loading', '⏳ Subiendo datos a la nube...');
   setCloudButtonsDisabled(true);
 
   try{
-    const active = getActiveSemester();
-    active.data = data;
-    const payload = { password, data: rootData };
-
-    const res = await fetch('/api/backup-push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const json = await res.json();
-
-    if(!res.ok){
-      const msg = json.error || 'Error desconocido.';
-      setCloudStatus('error', res.status === 401
-        ? '❌ Contraseña incorrecta. Verifica la contraseña de backup.'
-        : `❌ ${msg}`);
+    let r = await cloudPushCore(password);
+    if(r.status === 'conflict'){
+      const force = await showCustomConfirm('La nube tiene cambios más recientes', 'Hay una versión en la nube más nueva que la de este dispositivo y aún no la has restaurado. Si subes ahora, se sobrescribirá con tus datos locales. ¿Deseas sobrescribirla?', { confirmText: 'Sobrescribir nube', danger: true });
+      if(!force){
+        setCloudStatus('error', '⏸️ Subida cancelada. Usa "Restaurar desde la Nube" para traer la versión más reciente.');
+        return;
+      }
+      r = await cloudPushCore(password, { force: true });
+    }
+    if(r.status === 'error'){
+      setCloudStatus('error', cloudErrorMessage(r.res, r.json));
       return;
     }
-
-    const dateStr = json.date ? new Date(json.date).toLocaleString('es-MX') : '';
+    const dateStr = r.date ? new Date(r.date).toLocaleString('es-MX') : '';
     setCloudStatus('success', `✅ Backup subido correctamente a GitHub.\n${dateStr ? '📅 ' + dateStr : ''}`);
+    updateAutoSyncIndicator();
   } catch(e){
     setCloudStatus('error', '❌ Error de red. ¿Estás en la versión desplegada en Vercel?');
   } finally {
+    cloudBusy = false;
     setCloudButtonsDisabled(false);
   }
+}
+
+// Valida y aplica datos descargados de la nube. Devuelve true si se aplicaron.
+function applyCloudData(imported){
+  const isRootFormat = imported && Array.isArray(imported.semestres) && imported.semestres.length > 0;
+  const isLegacyFormat = imported && Array.isArray(imported.materias) && Array.isArray(imported.slots);
+  if(!isRootFormat && !isLegacyFormat) return false;
+
+  createSafetyBackup();
+
+  if(isRootFormat){
+    rootData = imported;
+  } else {
+    rootData = {
+      activeSemesterId: 'sem-cloud',
+      semestres: [{ id: 'sem-cloud', name: 'Semestre (Nube)', data: Object.assign(createEmptySemesterData(), imported) }]
+    };
+  }
+  if(!rootData.modifiedAt) rootData.modifiedAt = Date.now();
+
+  updateActiveDataReference();
+  setCloudMeta({ syncedStamp: getCloudStamp(isRootFormat ? imported : null), lastSyncAt: Date.now() });
+  saveData(true);
+  render();
+  updateAutoSyncIndicator();
+  return true;
 }
 
 async function pullFromCloud(){
@@ -1890,57 +2000,181 @@ async function pullFromCloud(){
   if(!confirmPull){
     return;
   }
+  if(cloudBusy) return;
 
+  cloudBusy = true;
+  clearTimeout(autoPushTimer);
   setCloudStatus('loading', '⏳ Descargando backup desde la nube...');
   setCloudButtonsDisabled(true);
 
   try{
-    const res = await fetch('/api/backup-pull', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
-
-    const json = await res.json();
-
+    const { res, json } = await cloudFetch(password);
     if(!res.ok){
-      const msg = json.error || 'Error desconocido.';
-      setCloudStatus('error', res.status === 401
-        ? '❌ Contraseña incorrecta. Verifica la contraseña de backup.'
-        : res.status === 404
-          ? '☁️ No se encontró ningún backup en la nube. Sube uno primero.'
-          : `❌ ${msg}`);
+      setCloudStatus('error', cloudErrorMessage(res, json));
       return;
     }
-
-    const imported = json.data;
-    const isRootFormat = imported && Array.isArray(imported.semestres) && imported.semestres.length > 0;
-    const isLegacyFormat = imported && Array.isArray(imported.materias) && Array.isArray(imported.slots);
-
-    if(!isRootFormat && !isLegacyFormat){
+    if(!applyCloudData(json.data)){
       setCloudStatus('error', '❌ El backup descargado tiene un formato inválido.');
       return;
     }
-
-    createSafetyBackup();
-
-    if(isRootFormat){
-      rootData = imported;
-    } else {
-      rootData = {
-        activeSemesterId: 'sem-cloud',
-        semestres: [{ id: 'sem-cloud', name: 'Semestre (Nube)', data: Object.assign(createEmptySemesterData(), imported) }]
-      };
-    }
-
-    updateActiveDataReference();
-    saveData();
-    render();
     setCloudStatus('success', '✅ Backup restaurado desde la nube exitosamente.');
   } catch(e){
     setCloudStatus('error', '❌ Error de red. ¿Estás en la versión desplegada en Vercel?');
   } finally {
+    cloudBusy = false;
     setCloudButtonsDisabled(false);
+  }
+}
+
+// ----- Detección de versión más reciente en la nube -----
+async function checkCloudUpdate(manual = false){
+  const password = getCloudPassword();
+  if(!password){
+    if(manual) setCloudStatus('error', '⚠️ Ingresa la contraseña de backup para buscar actualizaciones.');
+    return;
+  }
+  if(cloudBusy) return;
+  lastCloudCheckAt = Date.now();
+  if(manual) setCloudStatus('loading', '⏳ Buscando actualizaciones en la nube...');
+
+  try{
+    const { res, json } = await cloudFetch(password);
+    if(!res.ok){
+      if(manual) setCloudStatus('error', cloudErrorMessage(res, json));
+      return;
+    }
+    const cloudStamp = getCloudStamp(json.data);
+    const synced = getCloudMeta().syncedStamp || 0;
+
+    if(cloudStamp > synced){
+      if(!manual && cloudPromptedStamp === cloudStamp) return;
+      cloudPromptedStamp = cloudStamp;
+      const when = new Date(cloudStamp).toLocaleString('es-MX');
+      const localDirty = (rootData.modifiedAt || 0) > synced;
+      const warn = localDirty ? '\n\nAtención: este dispositivo tiene cambios sin subir que se reemplazarían (se guarda una copia de seguridad que podrás deshacer en Ajustes).' : '';
+      if(manual) setCloudStatus('success', `🆕 Hay una versión más reciente en la nube (${when}).`);
+      const ok = await showCustomConfirm('Versión más reciente en la nube', `Se encontró una versión más reciente en la nube (${when}). ¿Deseas actualizar este dispositivo ahora?${warn}`, { confirmText: 'Actualizar', danger: localDirty });
+      if(ok){
+        if(applyCloudData(json.data)) setCloudStatus('success', '✅ Datos actualizados desde la nube.');
+        else setCloudStatus('error', '❌ El backup descargado tiene un formato inválido.');
+      }
+    } else if(manual){
+      setCloudStatus('success', '✅ Estás al día: no hay versiones más recientes en la nube.');
+    }
+  } catch(e){
+    if(manual) setCloudStatus('error', '❌ Error de red. ¿Estás en la versión desplegada en Vercel?');
+  }
+}
+
+// ----- Respaldo automático (debounce de 4 s tras detectar cambios) -----
+function updateAutoSyncIndicator(state){
+  const el = document.getElementById('auto-sync-indicator');
+  if(!el) return;
+  const meta = getCloudMeta();
+  if(!meta.autoSync){ el.textContent = ''; return; }
+  const labels = {
+    pending:  '⏳ Cambios detectados, respaldando en unos segundos...',
+    syncing:  '☁️ Respaldando...',
+    conflict: '⚠️ La nube tiene una versión más reciente. Respaldo automático en pausa.',
+    error:    '❌ No se pudo respaldar automáticamente.',
+    offline:  '📡 Sin conexión. Se reintentará al reconectar.'
+  };
+  if(state && labels[state]){ el.textContent = labels[state]; return; }
+  el.textContent = meta.lastSyncAt
+    ? `✅ Sincronizado · ${new Date(meta.lastSyncAt).toLocaleTimeString('es-MX')}`
+    : '🟢 Respaldo automático activo';
+}
+
+function scheduleAutoCloudPush(){
+  const meta = getCloudMeta();
+  if(!meta.autoSync || !meta.password) return;
+  clearTimeout(autoPushTimer);
+  updateAutoSyncIndicator('pending');
+  autoPushTimer = setTimeout(runAutoCloudPush, AUTO_SYNC_DELAY_MS);
+}
+
+async function runAutoCloudPush(){
+  const meta = getCloudMeta();
+  if(!meta.autoSync || !meta.password) return;
+  if(cloudBusy){ autoPushTimer = setTimeout(runAutoCloudPush, 2000); return; }
+  if(!navigator.onLine){ updateAutoSyncIndicator('offline'); return; }
+
+  cloudBusy = true;
+  updateAutoSyncIndicator('syncing');
+  try{
+    const r = await cloudPushCore(meta.password);
+    if(r.status === 'ok'){
+      updateAutoSyncIndicator();
+    } else if(r.status === 'conflict'){
+      updateAutoSyncIndicator('conflict');
+      cloudBusy = false;
+      await checkCloudUpdate(false);
+      return;
+    } else {
+      updateAutoSyncIndicator('error');
+      setCloudStatus('error', cloudErrorMessage(r.res, r.json));
+    }
+  } catch(e){
+    updateAutoSyncIndicator('offline');
+  } finally {
+    cloudBusy = false;
+  }
+}
+
+async function toggleAutoSync(enabled){
+  const chk = document.getElementById('cloud-autosync');
+  if(!enabled){
+    clearTimeout(autoPushTimer);
+    setCloudMeta({ autoSync: false, password: '' });
+    updateAutoSyncIndicator();
+    setCloudStatus('success', '⏸️ Respaldo automático desactivado. La contraseña guardada en este dispositivo fue eliminada.');
+    return;
+  }
+
+  const password = (document.getElementById('cloud-password')?.value || '').trim();
+  if(!password){
+    if(chk) chk.checked = false;
+    setCloudStatus('error', '⚠️ Ingresa la contraseña de backup antes de activar el respaldo automático.');
+    return;
+  }
+
+  setCloudStatus('loading', '⏳ Verificando contraseña...');
+  try{
+    const { res, json } = await cloudFetch(password);
+    if(!res.ok && res.status !== 404){
+      if(chk) chk.checked = false;
+      setCloudStatus('error', cloudErrorMessage(res, json));
+      return;
+    }
+    setCloudMeta({ autoSync: true, password });
+    setCloudStatus('success', '🟢 Respaldo automático activado: se respaldará 4 segundos después de cada cambio.');
+    updateAutoSyncIndicator();
+    await checkCloudUpdate(false);
+    if((rootData.modifiedAt || 0) > (getCloudMeta().syncedStamp || 0)) scheduleAutoCloudPush();
+  } catch(e){
+    if(chk) chk.checked = false;
+    setCloudStatus('error', '❌ Error de red. ¿Estás en la versión desplegada en Vercel?');
+  }
+}
+
+function initCloudSync(){
+  const meta = getCloudMeta();
+  const chk = document.getElementById('cloud-autosync');
+  if(chk) chk.checked = !!meta.autoSync;
+  const pwd = document.getElementById('cloud-password');
+  if(pwd && meta.autoSync && meta.password) pwd.value = meta.password;
+  updateAutoSyncIndicator();
+
+  if(meta.autoSync && meta.password){
+    setTimeout(() => checkCloudUpdate(false), 1500);
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible' && Date.now() - lastCloudCheckAt > 60000){
+        checkCloudUpdate(false);
+      }
+    });
+    window.addEventListener('online', () => {
+      if((rootData.modifiedAt || 0) > (getCloudMeta().syncedStamp || 0)) scheduleAutoCloudPush();
+    });
   }
 }
 
@@ -3295,6 +3529,7 @@ function fmtDate(iso){
 }
 
 setDateLabel();
+initCloudSync();
 // ---------- Registro PWA Service Worker & Eventos de Instalación ----------
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
