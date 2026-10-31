@@ -957,9 +957,9 @@
   </div>
 </div>
 
-<!-- Modal: Registrar / Editar Inasistencia con Fecha Histórica -->
+<!-- Modal: Registrar / Editar Inasistencia con Fecha Histórica y Peso Inteligente -->
 <div class="overlay" id="overlay-falta" role="dialog" aria-modal="true">
-  <div class="modal" style="max-width:380px;">
+  <div class="modal" style="max-width:410px;">
     <h2 id="falta-modal-title">Registrar Inasistencia</h2>
     <div id="falta-materia-info" style="display:flex; align-items:center; gap:8px; margin-bottom:14px; font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;">
       <div id="falta-materia-dot" style="width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
@@ -967,13 +967,37 @@
     </div>
     <div class="field">
       <label for="falta-fecha-input">Fecha de la inasistencia</label>
-      <input type="date" id="falta-fecha-input" style="font-family:'IBM Plex Mono',monospace; cursor:pointer;" required>
+      <input type="date" id="falta-fecha-input" style="font-family:'IBM Plex Mono',monospace; cursor:pointer;" onchange="onFaltaDateChange()" required>
     </div>
-    <div style="display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;">
+    <div style="display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;">
       <button type="button" class="ghost" style="font-size:11.5px; padding:4px 10px;" onclick="setFaltaDatePreset(0)">Hoy</button>
       <button type="button" class="ghost" style="font-size:11.5px; padding:4px 10px;" onclick="setFaltaDatePreset(-1)">Ayer</button>
       <button type="button" class="ghost" style="font-size:11.5px; padding:4px 10px;" onclick="setFaltaDatePreset(-7)">Hace 1 semana</button>
     </div>
+
+    <!-- Selector de sesión cuando la materia tiene múltiples clases separadas el mismo día -->
+    <div class="field" id="falta-sessions-wrap" style="display:none; margin-bottom:14px; padding:10px 12px; border-radius:9px; background:rgba(var(--amber-rgb),0.08); border:1px solid rgba(var(--amber-rgb),0.28);">
+      <span class="field-label" id="falta-sessions-label" style="margin-bottom:7px; color:var(--amber); font-size:11px;">Sesiones programadas ese día</span>
+      <div id="falta-sessions-list" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- Peso / Equivalencia en faltas -->
+    <div class="field" style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+        <label for="falta-peso-input" style="margin:0;">Peso de la inasistencia</label>
+        <span id="falta-peso-hint" style="font-size:11px; color:var(--amber); font-family:'IBM Plex Mono',monospace; font-weight:600;"></span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <button type="button" class="day-chip falta-peso-chip" data-peso="1" onclick="setFaltaWeight(1, true)">1 falta</button>
+        <button type="button" class="day-chip falta-peso-chip" data-peso="2" onclick="setFaltaWeight(2, true)">2 faltas</button>
+        <button type="button" class="day-chip falta-peso-chip" data-peso="3" onclick="setFaltaWeight(3, true)">3 faltas</button>
+        <div style="display:inline-flex; align-items:center; gap:5px; margin-left:auto;">
+          <span style="font-size:11.5px; color:var(--ink-dim); font-family:'IBM Plex Mono',monospace;">Otro:</span>
+          <input type="number" id="falta-peso-input" min="1" max="20" step="1" value="1" oninput="onCustomFaltaWeightInput(this.value)" style="width:64px; padding:6px 8px; text-align:center; font-family:'IBM Plex Mono',monospace; font-weight:600;" title="Cantidad de faltas que suma esta inasistencia">
+        </div>
+      </div>
+    </div>
+
     <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center;">
       <button class="ghost danger" id="btn-delete-falta-modal" type="button" style="display:none;" onclick="deleteFaltaFromModal()">Eliminar</button>
       <div style="display:flex; gap:8px; margin-left:auto;">
@@ -2265,15 +2289,17 @@ if(ovFalta){
     if(e.target.id === 'overlay-falta') closeFaltaModal();
   });
 }
-const faltaInp = document.getElementById('falta-fecha-input');
-if(faltaInp){
-  faltaInp.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      saveFaltaModal();
-    }
-  });
-}
+['falta-fecha-input', 'falta-peso-input'].forEach(id => {
+  const inp = document.getElementById(id);
+  if(inp){
+    inp.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        saveFaltaModal();
+      }
+    });
+  }
+});
 
 const HOURS_METRIC_MODES = ['weekly', 'exact', 'semester', 'daily', 'rest'];
 
@@ -2928,7 +2954,7 @@ function render(){
   renderAccentSwatches();
   renderSafetyBackupBanner();
 
-  const totalFaltas = (data.faltas || []).length;
+  const totalFaltas = getTotalFaltasCount();
   document.getElementById('stat-faltas').textContent = totalFaltas;
 
   renderHoursMetric();
@@ -3087,7 +3113,7 @@ function renderMaterias(){
   const wrap = document.getElementById('materias-cards');
   wrap.innerHTML = '';
   data.materias.forEach(m=>{
-    const count = data.faltas.filter(f=>f.materiaId===m.id).length;
+    const count = getMateriaFaltasCount(m.id);
     const pct = Math.min(100, Math.round((count/(m.limite||1))*100));
     const barColor = getAbsenceColor(pct);
     const card = el('div','mcard','');
@@ -3120,23 +3146,27 @@ function renderFaltas(){
   }
   data.materias.forEach(m=>{
     const registros = data.faltas.filter(f=>f.materiaId===m.id).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+    const totalPeso = getMateriaFaltasCount(m.id);
     const row = el('div','frow','');
     const dot = el('div','dot',''); dot.style.background = m.color;
     row.appendChild(dot);
     const name = el('div','name', m.nombre);
     row.appendChild(name);
-    const count = el('div','count', registros.length+' / '+m.limite+' faltas');
+    const count = el('div','count', totalPeso+' / '+m.limite+' faltas');
     row.appendChild(count);
     const addBtn = el('button','ghost','+ Registrar falta');
-    addBtn.title = 'Registrar inasistencia con fecha actual o histórica';
+    addBtn.title = 'Registrar inasistencia con fecha actual o histórica y peso de faltas';
     addBtn.addEventListener('click', ()=> openFaltaModal(m.id));
     row.appendChild(addBtn);
     if(registros.length){
       const hist = el('div','history','');
       registros.forEach(r=>{
+        const peso = getFaltaWeight(r);
         const chip = document.createElement('span');
-        chip.textContent = fmtDate(r.fecha) + ' ';
-        chip.title = `Inasistencia del ${r.fecha} (Haz clic para editar la fecha)`;
+        const pesoSuffix = peso > 1 ? ` · ×${peso}` : '';
+        chip.textContent = fmtDate(r.fecha) + pesoSuffix + ' ';
+        const sesInfo = r.sessionLabel ? ` [${r.sessionLabel}]` : '';
+        chip.title = `Inasistencia del ${r.fecha}${sesInfo} · Equivale a ${peso} ${peso === 1 ? 'falta' : 'faltas'} (Haz clic para editar)`;
         chip.style.cursor = 'pointer';
         chip.addEventListener('click', (e)=>{
           if(e.target.tagName.toLowerCase() === 'button') return;
@@ -3411,9 +3441,71 @@ function removeSlot(slotId){
   render();
 }
 
-// ---------- Faltas con Fechas Históricas ----------
+// ---------- Faltas con Fechas Históricas y Peso Inteligente ----------
 let editingFaltaId = null;
 let currentFaltaMateriaId = null;
+let currentFaltaWeight = 1;
+let currentFaltaSessionLabel = '';
+let userModifiedFaltaWeight = false;
+
+function getFaltaWeight(f){
+  if(!f) return 1;
+  const p = Number(f.peso);
+  return (Number.isFinite(p) && p > 0) ? Math.round(p) : 1;
+}
+
+function getMateriaFaltasCount(materiaId){
+  return (data.faltas || [])
+    .filter(f => f.materiaId === materiaId)
+    .reduce((sum, f) => sum + getFaltaWeight(f), 0);
+}
+
+function getTotalFaltasCount(){
+  return (data.faltas || [])
+    .reduce((sum, f) => sum + getFaltaWeight(f), 0);
+}
+
+// Obtiene las sesiones continuas de una materia en un día de la semana (0 = Lunes .. 4 = Viernes),
+// fusionando bloques contiguos o solapados para distinguir entre una clase de varias horas seguidas
+// y múltiples clases separadas en distintos horarios del mismo día.
+function getMateriaSessionsOnDay(materiaId, dayIndex){
+  if(dayIndex < 0 || dayIndex > 4) return [];
+  const rawSlots = (data.slots || [])
+    .filter(s => s.materiaId === materiaId && s.day === dayIndex)
+    .map(s => ({
+      startMin: getSlotStartMinutes(s),
+      endMin: getSlotEndMinutes(s)
+    }))
+    .filter(s => s.endMin > s.startMin)
+    .sort((a, b) => a.startMin - b.startMin);
+
+  if(rawSlots.length === 0) return [];
+
+  const merged = [{ startMin: rawSlots[0].startMin, endMin: rawSlots[0].endMin }];
+  for(let i = 1; i < rawSlots.length; i++){
+    const prev = merged[merged.length - 1];
+    const curr = rawSlots[i];
+    if(curr.startMin <= prev.endMin){
+      prev.endMin = Math.max(prev.endMin, curr.endMin);
+    } else {
+      merged.push({ startMin: curr.startMin, endMin: curr.endMin });
+    }
+  }
+
+  return merged.map((seg, idx) => {
+    const durationMin = seg.endMin - seg.startMin;
+    const weight = Math.max(1, Math.round(durationMin / 60));
+    const label = `${formatTime(seg.startMin)} - ${formatTime(seg.endMin)}`;
+    return {
+      index: idx,
+      startMin: seg.startMin,
+      endMin: seg.endMin,
+      durationMin,
+      weight,
+      label
+    };
+  });
+}
 
 function getLocalDateString(date = new Date()){
   const year = date.getFullYear();
@@ -3422,11 +3514,141 @@ function getLocalDateString(date = new Date()){
   return `${year}-${month}-${day}`;
 }
 
+function clearSessionChipsSelection(){
+  document.querySelectorAll('.falta-session-chip').forEach(b => b.classList.remove('sel'));
+}
+
+function setFaltaWeight(val, isManual = false, sessionLabel = ''){
+  const parsed = Math.max(1, Math.min(20, Math.round(Number(val) || 1)));
+  currentFaltaWeight = parsed;
+  if(isManual){
+    userModifiedFaltaWeight = true;
+    currentFaltaSessionLabel = sessionLabel || '';
+    if(!sessionLabel) clearSessionChipsSelection();
+    const hintEl = document.getElementById('falta-peso-hint');
+    if(hintEl){
+      hintEl.textContent = sessionLabel
+        ? `Sesión: ${sessionLabel}`
+        : `Manual (${parsed} ${parsed === 1 ? 'falta' : 'faltas'})`;
+    }
+  }
+  const inp = document.getElementById('falta-peso-input');
+  if(inp && Number(inp.value) !== parsed) inp.value = parsed;
+
+  document.querySelectorAll('.falta-peso-chip').forEach(btn => {
+    btn.classList.toggle('sel', Number(btn.dataset.peso) === parsed);
+  });
+}
+
+function onCustomFaltaWeightInput(rawVal){
+  const num = parseInt(rawVal, 10);
+  if(!isNaN(num) && num >= 1){
+    setFaltaWeight(num, true, '');
+  }
+}
+
+function refreshFaltaScheduleContext(autoApplyWeight = false){
+  const dateInput = document.getElementById('falta-fecha-input');
+  const sessionsWrap = document.getElementById('falta-sessions-wrap');
+  const sessionsLabel = document.getElementById('falta-sessions-label');
+  const sessionsList = document.getElementById('falta-sessions-list');
+  const hintEl = document.getElementById('falta-peso-hint');
+
+  const fechaIso = dateInput ? dateInput.value : '';
+  if(!fechaIso || !currentFaltaMateriaId){
+    if(sessionsWrap) sessionsWrap.style.display = 'none';
+    return;
+  }
+
+  const d = new Date(fechaIso + 'T00:00:00');
+  const jsDay = d.getDay();
+  const dayIdx = (jsDay >= 1 && jsDay <= 5) ? (jsDay - 1) : -1;
+  const dayName = dayIdx >= 0 ? DAYS[dayIdx] : (jsDay === 6 ? 'Sábado' : 'Domingo');
+  const sessions = dayIdx >= 0 ? getMateriaSessionsOnDay(currentFaltaMateriaId, dayIdx) : [];
+
+  if(sessions.length === 0){
+    if(sessionsWrap) sessionsWrap.style.display = 'none';
+    if(autoApplyWeight && !userModifiedFaltaWeight){
+      currentFaltaSessionLabel = '';
+      setFaltaWeight(1, false);
+      if(hintEl) hintEl.textContent = `Sin clase en ${dayName} · 1 falta por defecto`;
+    }
+  } else if(sessions.length === 1){
+    const ses = sessions[0];
+    if(sessionsWrap) sessionsWrap.style.display = 'none';
+    if(autoApplyWeight && !userModifiedFaltaWeight){
+      currentFaltaSessionLabel = ses.label;
+      setFaltaWeight(ses.weight, false);
+      if(hintEl) hintEl.textContent = `Sugerido (${dayName} ${ses.label}): ${ses.weight} ${ses.weight === 1 ? 'falta' : 'faltas'}`;
+    }
+  } else {
+    if(sessionsWrap) sessionsWrap.style.display = 'block';
+    if(sessionsLabel) sessionsLabel.textContent = `Hay ${sessions.length} clases en ${dayName} · ¿A cuál faltaste?`;
+    if(sessionsList) sessionsList.innerHTML = '';
+
+    const totalDayWeight = sessions.reduce((acc, s) => acc + s.weight, 0);
+
+    let defaultSesIdx = 0;
+    if(fechaIso === getLocalDateString()){
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      for(let i = 0; i < sessions.length; i++){
+        if(nowMin >= sessions[i].startMin){
+          defaultSesIdx = i;
+        }
+      }
+    }
+
+    const options = sessions.map((s, idx) => ({
+      id: `ses-${idx}`,
+      title: `${s.label} (${s.weight}f)`,
+      sessionLabel: s.label,
+      weight: s.weight
+    }));
+    options.push({
+      id: 'ses-all',
+      title: `Todas (${totalDayWeight}f)`,
+      sessionLabel: `Todas las sesiones (${totalDayWeight}f)`,
+      weight: totalDayWeight
+    });
+
+    if(autoApplyWeight && !userModifiedFaltaWeight){
+      const chosen = options[defaultSesIdx] || options[0];
+      currentFaltaSessionLabel = chosen.sessionLabel;
+      setFaltaWeight(chosen.weight, false);
+      if(hintEl) hintEl.textContent = `Múltiples sesiones en ${dayName} · Elige sesión arriba`;
+    }
+
+    options.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const isSelected = currentFaltaSessionLabel === opt.sessionLabel;
+      btn.className = 'day-chip falta-session-chip' + (isSelected ? ' sel' : '');
+      btn.style.fontSize = '11.5px';
+      btn.style.padding = '5px 10px';
+      btn.textContent = opt.title;
+      btn.addEventListener('click', () => {
+        clearSessionChipsSelection();
+        btn.classList.add('sel');
+        setFaltaWeight(opt.weight, true, opt.sessionLabel);
+      });
+      if(sessionsList) sessionsList.appendChild(btn);
+    });
+  }
+}
+
+function onFaltaDateChange(){
+  refreshFaltaScheduleContext(true);
+}
+
 function setFaltaDatePreset(dayOffset){
   const d = new Date();
   d.setDate(d.getDate() + dayOffset);
   const inp = document.getElementById('falta-fecha-input');
-  if(inp) inp.value = getLocalDateString(d);
+  if(inp){
+    inp.value = getLocalDateString(d);
+    refreshFaltaScheduleContext(true);
+  }
 }
 
 function openFaltaModal(materiaId, faltaId = null){
@@ -3440,6 +3662,7 @@ function openFaltaModal(materiaId, faltaId = null){
   const matName = document.getElementById('falta-materia-name');
   const dateInput = document.getElementById('falta-fecha-input');
   const delBtn = document.getElementById('btn-delete-falta-modal');
+  const hintEl = document.getElementById('falta-peso-hint');
 
   if(matDot) matDot.style.background = mat.color;
   if(matName) matName.textContent = mat.nombre;
@@ -3449,10 +3672,23 @@ function openFaltaModal(materiaId, faltaId = null){
     if(modalTitle) modalTitle.textContent = 'Editar Inasistencia';
     if(dateInput) dateInput.value = falta ? falta.fecha : getLocalDateString();
     if(delBtn) delBtn.style.display = 'inline-flex';
+    const savedWeight = getFaltaWeight(falta);
+    currentFaltaSessionLabel = (falta && falta.sessionLabel) ? falta.sessionLabel : '';
+    userModifiedFaltaWeight = true;
+    setFaltaWeight(savedWeight, false);
+    if(hintEl){
+      hintEl.textContent = currentFaltaSessionLabel
+        ? `Sesión: ${currentFaltaSessionLabel}`
+        : `Guardado: ${savedWeight} ${savedWeight === 1 ? 'falta' : 'faltas'}`;
+    }
+    refreshFaltaScheduleContext(false);
   } else {
     if(modalTitle) modalTitle.textContent = 'Registrar Inasistencia';
     if(dateInput) dateInput.value = getLocalDateString();
     if(delBtn) delBtn.style.display = 'none';
+    currentFaltaSessionLabel = '';
+    userModifiedFaltaWeight = false;
+    refreshFaltaScheduleContext(true);
   }
 
   document.getElementById('overlay-falta').classList.add('active');
@@ -3466,21 +3702,34 @@ function closeFaltaModal(){
   if(ov) ov.classList.remove('active');
   editingFaltaId = null;
   currentFaltaMateriaId = null;
+  currentFaltaSessionLabel = '';
+  userModifiedFaltaWeight = false;
 }
 
 function saveFaltaModal(){
   const dateInput = document.getElementById('falta-fecha-input');
+  const pesoInput = document.getElementById('falta-peso-input');
   const fecha = dateInput ? dateInput.value : '';
   if(!fecha){
     showCustomAlert('Fecha Requerida', 'Por favor selecciona o introduce una fecha válida para la inasistencia.', 'warning');
     return;
   }
 
+  const rawPeso = pesoInput ? parseInt(pesoInput.value, 10) : currentFaltaWeight;
+  const peso = (!isNaN(rawPeso) && rawPeso >= 1) ? Math.min(20, rawPeso) : 1;
+
   if(editingFaltaId){
     const f = data.faltas.find(x => x.id === editingFaltaId);
-    if(f) f.fecha = fecha;
+    if(f){
+      f.fecha = fecha;
+      f.peso = peso;
+      if(currentFaltaSessionLabel) f.sessionLabel = currentFaltaSessionLabel;
+      else delete f.sessionLabel;
+    }
   } else {
-    data.faltas.push({ id: uid(), materiaId: currentFaltaMateriaId, fecha });
+    const newFalta = { id: uid(), materiaId: currentFaltaMateriaId, fecha, peso };
+    if(currentFaltaSessionLabel) newFalta.sessionLabel = currentFaltaSessionLabel;
+    data.faltas.push(newFalta);
   }
 
   saveData();
@@ -3495,9 +3744,10 @@ function deleteFaltaFromModal(){
   }
 }
 
-function registrarFalta(materiaId, customDate = null){
+function registrarFalta(materiaId, customDate = null, customPeso = 1){
   const fecha = customDate || getLocalDateString();
-  data.faltas.push({ id: uid(), materiaId, fecha });
+  const peso = Math.max(1, Math.round(Number(customPeso) || 1));
+  data.faltas.push({ id: uid(), materiaId, fecha, peso });
   saveData();
   render();
 }
